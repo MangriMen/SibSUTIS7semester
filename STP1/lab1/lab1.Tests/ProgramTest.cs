@@ -9,31 +9,35 @@ namespace lab1Test
         [TestMethod]
         public void TestGetEvenProduct()
         {
-            float[] sequence = new[] { 1.5f, 2.5f, 4.2f, 6.3f };
+            var sequence = new float[] { 1.5f, 2.5f, 4.2f, 6.3f };
 
-            var actualSequence = Modules.GetEvenProduct(sequence);
+            var expectedValue = 6.3f;
+            var actualValue = Modules.GetEvenProduct(sequence);
+            var accuracy = 0.000001f;
 
-            Assert.AreEqual(6.3f, actualSequence, 0.000001);
+            Assert.AreEqual(expectedValue, actualValue, accuracy);
         }
 
         [TestMethod]
         public void TestShiftSequence()
         {
-            int[] sequence = new[] { 1, 2, 3, 4, 5 };
+            var sequence = new float[] { 1, 2, 3, 4, 5 };
 
-            var actualSequence = Modules.ShiftSequence(sequence, 2);
+            var expectedValue = new float[] { 4, 5, 1, 2, 3 };
+            var actualValue = Modules.ShiftSequence(sequence, 2);
 
-            CollectionAssert.AreEqual(new[] { 4, 5, 1, 2, 3 }, actualSequence);
+            CollectionAssert.AreEqual(expectedValue, actualValue);
         }
 
         [TestMethod]
         public void TestGetMaxEvenAndIndex()
         {
-            int[] sequence = new[] { 1, 2, 3, 4, 5 };
+            var sequence = new int[] { 1, 2, 3, 4, 5 };
 
-            var answer = Modules.GetMaxEvenAndIndex(sequence);
+            var expectedValue = (5, 4);
+            var actualValue = Modules.GetMaxEvenAndIndex(sequence);
 
-            Assert.AreEqual((5, 4), answer);
+            Assert.AreEqual(expectedValue, actualValue);
         }
     }
 }

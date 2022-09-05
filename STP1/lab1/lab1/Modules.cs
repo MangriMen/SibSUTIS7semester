@@ -18,12 +18,22 @@ namespace lab1
             return product;
         }
 
-        public static int[] ShiftSequence(int[] sequence, int shift)
+        public static float[] ShiftSequence(float[] sequence, int shift)
         {
-            int[] newSequence = new int[sequence.Length];
+            int fixedShift = Math.Abs(shift % sequence.Length);
 
-            Array.Copy(sequence, 0, newSequence, shift, sequence.Length - shift);
-            Array.Copy(sequence, sequence.Length - shift, newSequence, 0, shift);
+            float[] newSequence = new float[sequence.Length];
+
+            if (shift >= 0)
+            {
+                Array.Copy(sequence, 0, newSequence, fixedShift, sequence.Length - fixedShift);
+                Array.Copy(sequence, sequence.Length - fixedShift, newSequence, 0, fixedShift);
+            }
+            else
+            {
+                Array.Copy(sequence, fixedShift, newSequence, 0, sequence.Length - fixedShift);
+                Array.Copy(sequence, 0, newSequence, sequence.Length - fixedShift, fixedShift);
+            }
 
             return newSequence;
         }
