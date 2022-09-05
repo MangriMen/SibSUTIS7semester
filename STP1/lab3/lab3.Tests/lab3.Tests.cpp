@@ -72,7 +72,9 @@ namespace lab3Tests
 
 			Assert::AreEqual(expected_value, actual_value);
 
-			Assert::ExpectException<std::invalid_argument>([]() { Class1::ShiftInt(123456, 2, Class1::ShiftDirection(20)); });
+			auto triggerException = [] { Class1::ShiftInt(123456, 2, Class1::ShiftDirection(20)); };
+
+			Assert::ExpectException<std::invalid_argument>(triggerException);
 		}
 
 		TEST_METHOD(TestFibNumber)

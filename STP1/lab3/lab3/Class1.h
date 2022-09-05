@@ -52,7 +52,7 @@ public:
 		case ShiftDirection::right:
 			return ShiftRight(number, shiftCount);
 		default:
-			throw new std::exception("Unknown direction");
+			throw std::invalid_argument("Unknown direction");
 		}
 	}
 
