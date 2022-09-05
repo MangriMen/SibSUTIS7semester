@@ -19,12 +19,23 @@ namespace lab1Test
         }
 
         [TestMethod]
-        public void TestShiftSequence()
+        public void TestShiftSequenceRight()
         {
             var sequence = new float[] { 1, 2, 3, 4, 5 };
 
             var expectedValue = new float[] { 4, 5, 1, 2, 3 };
             var actualValue = Modules.ShiftSequence(sequence, 2);
+
+            CollectionAssert.AreEqual(expectedValue, actualValue);
+        }
+
+        [TestMethod]
+        public void TestShiftSequenceLeft()
+        {
+            var sequence = new float[] { 1, 2, 3, 4, 5 };
+
+            var expectedValue = new float[] { 3, 4, 5, 1, 2 };
+            var actualValue = Modules.ShiftSequence(sequence, -2);
 
             CollectionAssert.AreEqual(expectedValue, actualValue);
         }
