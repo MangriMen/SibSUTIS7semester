@@ -9,20 +9,20 @@ public:
 		right
 	};
 
-	static int getNumberRankCount(int number) {
-		int rankCount = 0;
+	static int GetNumberRankCount(int number) {
+		int rank_count = 0;
 		while (number) {
 			number /= 10;
-			rankCount++;
+			rank_count++;
 		}
-		return rankCount;
+		return rank_count != 0 ? rank_count : 1;
 	}
 
-	static int shiftLeft(int number, int shiftCount, int base = 10) {
-		int rankCount = getNumberRankCount(number);
-		int position = static_cast<unsigned int>(std::pow(base, rankCount - 1));
+	static int ShiftLeft(int number, int shiftCount, int base = 10) {
+		int rank_count = GetNumberRankCount(number);
+		int position = static_cast<unsigned int>(std::pow(base, rank_count - 1));
 
-		for (int i = 0; i < shiftCount; i++) {
+		for (int i = 0; i < (shiftCount % rank_count); i++) {
 			int tmp = number / position;
 			number %= position;
 			number = number * base + tmp;
@@ -30,11 +30,11 @@ public:
 		return number;
 	}
 
-	static int shiftRight(int number, int shiftCount, int base = 10) {
-		int rankCount = getNumberRankCount(number);
-		int position = static_cast<unsigned int>(std::pow(base, rankCount - 1));
+	static int ShiftRight(int number, int shiftCount, int base = 10) {
+		int rank_count = GetNumberRankCount(number);
+		int position = static_cast<unsigned int>(std::pow(base, rank_count - 1));
 
-		for (int i = 0; i < shiftCount; i++) {
+		for (int i = 0; i < (shiftCount % rank_count); i++) {
 			int tmp = number % base;
 			number /= base;
 			number = tmp * position + number;
@@ -44,22 +44,19 @@ public:
 
 	// Tasks
 
-	static int shiftInt(int number, int shiftCount, ShiftDirection direction) {
+	static int ShiftInt(int number, int shiftCount, ShiftDirection direction) {
 		switch (direction)
 		{
 		case ShiftDirection::left:
-			return shiftLeft(number, shiftCount);
-			break;
+			return ShiftLeft(number, shiftCount);
 		case ShiftDirection::right:
-			return shiftRight(number, shiftCount);
-			break;
+			return ShiftRight(number, shiftCount);
 		default:
-			throw new std::invalid_argument("Unknown direction");
-			break;
+			throw new std::exception("Unknown direction");
 		}
 	}
 
-	static int fibNumber(int n) {
+	static int FibNumber(int n) {
 		int a = 0;
 		int b = 1;
 		for (int i = 0; i < n; i++) {
@@ -69,24 +66,24 @@ public:
 		return a;
 	}
 
-	static int delDecimalInt(int number, int position, int count) {
-		int rankCount = getNumberRankCount(number);
+	static int DelDecimalInt(int number, int position, int count) {
+		int rank_count = GetNumberRankCount(number);
 
-		int zeroCount = static_cast<unsigned int>(std::pow(10, rankCount - position - count));
+		int zero_count = static_cast<unsigned int>(std::pow(10, rank_count - position - count));
 
-		int lastPart = number % zeroCount;
-		int firstPart = number / static_cast<unsigned int>(std::pow(10, rankCount - position));
+		int last_part = number % zero_count;
+		int first_part = number / static_cast<unsigned int>(std::pow(10, rank_count - position));
 
-		return firstPart * zeroCount + lastPart;
+		return first_part * zero_count + last_part;
 	}
 
-	static int getEvenSumTopAndSecondaryDiagonalMatrix(std::vector<std::vector<int>> matrix) {
+	static int GetEvenSumTopAndSecondaryDiagonalMatrix(std::vector<std::vector<int>> matrix) {
 		int sum = 0;
 		for (int i = 0; i < matrix.size(); i++) {
-			for (int j = 0; j < matrix[i].size() - i; j++) {
-				if (i + j >= matrix.size() - 1) {
-					continue;
-				}
+			if (matrix[i].size() - i - 1 > matrix[i].size()) {
+				continue;
+			}
+			for (int j = 0; j < matrix[i].size() - i - 1; j++) {
 				if (!(i % 2) && !(j % 2)) {
 					sum += matrix[i][j];
 				}
@@ -95,4 +92,3 @@ public:
 		return sum;
 	}
 };
-
