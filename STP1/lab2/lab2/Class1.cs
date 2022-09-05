@@ -7,9 +7,9 @@
             return (Math.Max(a, b), Math.Min(a, b));
         }
 
-        public static int GetEvenProductMatrix(int[,] array)
+        public static float GetEvenProductMatrix(float[,] array)
         {
-            int product = 1;
+            float product = 1;
             for (int i = 0; i < array.GetLength(0); i++)
             {
                 for (int j = 0; j < array.GetLength(1); j++)
@@ -23,9 +23,9 @@
             return product;
         }
 
-        public static int GetEvenSumLeftTopTriangleMatrix(int[,] array)
+        public static float GetEvenSumLeftTopTriangleMatrix(float[,] array)
         {
-            int sum = 0;
+            float sum = 0;
             for (int i = 0; i < array.GetLength(0); i++)
             {
                 for (int j = 0; j < array.GetLength(1) - i; j++)
