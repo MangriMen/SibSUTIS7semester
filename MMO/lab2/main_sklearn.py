@@ -26,7 +26,6 @@ def main():
         writer = csv.writer(fileOut)
         header = ["accuracy", "max depth", "max leaf nodes"]
         writer.writerow(header)
-        # print(header)
         for max_depth, max_leaf_nodes in product(range(10, 100, 10), range(10, 100, 10)):
             clf = DecisionTreeClassifier(
                 max_depth=max_depth, max_leaf_nodes=max_leaf_nodes)
