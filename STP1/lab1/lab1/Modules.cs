@@ -11,19 +11,31 @@ namespace lab1
         public static double GetEvenProduct(float[] sequence)
         {
             double product = 1;
-            for (int i = 0; i < sequence.Length; i += 2)
+            for (int i = 0;
+                i < sequence.Length;
+                i += 2)
             {
                 product *= sequence[i];
             }
             return product;
         }
 
-        public static int[] ShiftSequence(int[] sequence, int shift)
+        public static float[] ShiftSequence(float[] sequence, int shift)
         {
-            int[] newSequence = new int[sequence.Length];
+            int fixedShift = Math.Abs(shift % sequence.Length);
 
-            Array.Copy(sequence, 0, newSequence, shift, sequence.Length - shift);
-            Array.Copy(sequence, sequence.Length - shift, newSequence, 0, shift);
+            float[] newSequence = new float[sequence.Length];
+
+            if (shift >= 0)
+            {
+                Array.Copy(sequence, 0, newSequence, fixedShift, sequence.Length - fixedShift);
+                Array.Copy(sequence, sequence.Length - fixedShift, newSequence, 0, fixedShift);
+            }
+            else
+            {
+                Array.Copy(sequence, fixedShift, newSequence, 0, sequence.Length - fixedShift);
+                Array.Copy(sequence, 0, newSequence, sequence.Length - fixedShift, fixedShift);
+            }
 
             return newSequence;
         }
@@ -32,7 +44,9 @@ namespace lab1
         {
             long maxNumber = long.MinValue;
             int maxNumberIndex = -1;
-            for (int i = 0; i < sequence.Length; i += 2)
+            for (int i = 0;
+                i < sequence.Length;
+                i += 2)
             {
                 if (maxNumber < sequence[i])
                 {
