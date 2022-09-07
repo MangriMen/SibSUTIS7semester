@@ -7,12 +7,16 @@
             return (Math.Max(a, b), Math.Min(a, b));
         }
 
-        public static int GetEvenProductMatrix(int[,] array)
+        public static float GetEvenProductMatrix(float[,] array)
         {
-            int product = 1;
-            for (int i = 0; i < array.GetLength(0); i++)
+            float product = array.Length > 0 ? 1 : 0;
+            for (int i = 0;
+                i < array.GetLength(0);
+                i++)
             {
-                for (int j = 0; j < array.GetLength(1); j++)
+                for (int j = 0;
+                    j < array.GetLength(1);
+                    j++)
                 {
                     if (array[i, j] % 2 == 0)
                     {
@@ -23,12 +27,16 @@
             return product;
         }
 
-        public static int GetEvenSumLeftTopTriangleMatrix(int[,] array)
+        public static float GetEvenSumLeftTopTriangleMatrix(float[,] array)
         {
-            int sum = 0;
-            for (int i = 0; i < array.GetLength(0); i++)
+            float sum = 0;
+            for (int i = 0;
+                i < array.GetLength(0);
+                i++)
             {
-                for (int j = 0; j < array.GetLength(1) - i; j++)
+                for (int j = 0;
+                    j < array.GetLength(1) - i;
+                    j++)
                 {
                     if (array[i, j] % 2 == 0)
                     {
