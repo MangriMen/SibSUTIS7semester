@@ -11,7 +11,9 @@ namespace lab1
         public static double GetEvenProduct(float[] sequence)
         {
             double product = 1;
-            for (int i = 0; i < sequence.Length; i += 2)
+            for (int i = 0;
+                i < sequence.Length;
+                i += 2)
             {
                 product *= sequence[i];
             }
@@ -42,7 +44,9 @@ namespace lab1
         {
             long maxNumber = long.MinValue;
             int maxNumberIndex = -1;
-            for (int i = 0; i < sequence.Length; i += 2)
+            for (int i = 0;
+                i < sequence.Length;
+                i += 2)
             {
                 if (maxNumber < sequence[i])
                 {
