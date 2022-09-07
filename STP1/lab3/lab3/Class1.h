@@ -22,7 +22,9 @@ public:
 		int rank_count = GetNumberRankCount(number);
 		int position = static_cast<unsigned int>(std::pow(base, rank_count - 1));
 
-		for (int i = 0; i < (shiftCount % rank_count); i++) {
+		for (int i = 0;
+			i < (shiftCount % rank_count);
+			i++) {
 			int tmp = number / position;
 			number %= position;
 			number = number * base + tmp;
@@ -34,7 +36,9 @@ public:
 		int rank_count = GetNumberRankCount(number);
 		int position = static_cast<unsigned int>(std::pow(base, rank_count - 1));
 
-		for (int i = 0; i < (shiftCount % rank_count); i++) {
+		for (int i = 0;
+			i < (shiftCount % rank_count);
+			i++) {
 			int tmp = number % base;
 			number /= base;
 			number = tmp * position + number;
@@ -59,7 +63,9 @@ public:
 	static int FibNumber(int n) {
 		int a = 0;
 		int b = 1;
-		for (int i = 0; i < n; i++) {
+		for (int i = 0;
+			i < n;
+			i++) {
 			a = a + b;
 			b = a - b;
 		}
@@ -79,11 +85,15 @@ public:
 
 	static int GetEvenSumTopAndSecondaryDiagonalMatrix(std::vector<std::vector<int>> matrix) {
 		int sum = 0;
-		for (int i = 0; i < matrix.size(); i++) {
+		for (int i = 0;
+			i < matrix.size();
+			i++) {
 			if (matrix[i].size() - i - 1 > matrix[i].size()) {
 				continue;
 			}
-			for (int j = 0; j < matrix[i].size() - i - 1; j++) {
+			for (int j = 0;
+				j < matrix[i].size() - i - 1;
+				j++) {
 				if (!(i % 2) && !(j % 2)) {
 					sum += matrix[i][j];
 				}
