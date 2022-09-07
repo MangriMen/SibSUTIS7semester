@@ -1,5 +1,9 @@
 #include <iostream>
 #include "../lab1/lab1.cpp"
+#include <random>
+#include <array>
+
+using namespace std;
 
 int main()
 {

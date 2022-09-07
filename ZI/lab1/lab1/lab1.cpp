@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "framework.h"
+#include "lab1.h"
 
 long long modExp(long long a, long long x, long long p) {
 	long long y = 1;
