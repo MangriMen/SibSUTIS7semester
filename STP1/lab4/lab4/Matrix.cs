@@ -213,12 +213,12 @@ namespace lab4
 
         public override bool Equals(object? obj)
         {
-            return base.Equals(obj);
+            return this == (obj as Matrix);
         }
 
         public override int GetHashCode()
         {
-            return this.GetHashCode();
+            return GetHashCode();
         }
     }
 
