@@ -1,3 +1,4 @@
+import time
 import random
 import math
 import pylab as pl
@@ -16,7 +17,7 @@ def readCSVData(filename):
                 count += 1
                 continue
             data.append([int(x) for x in row])
-    return data
+    return np.array(data)
 
 
 def showData(trainData):
@@ -36,7 +37,7 @@ def splitTrainTest(data, testPercent):
             testData.append(row)
         else:
             trainData.append(row)
-    return trainData, testData
+    return np.array(trainData), np.array(testData)
 
 
 def classifyKNN(trainData, testData, k, numberOfClasses):
@@ -64,18 +65,52 @@ def classifyKNN(trainData, testData, k, numberOfClasses):
     return testLabels
 
 
-def classifyPWRWS(z):
+def reactangleCore(u):
+    return 1/2 if abs(u) <= 1 else 0
 
-    pass
+
+def classifyPWRWS(trainData, testData, k, numberOfClasses):
+    # Euclidean distance between 2-dimensional point
+
+    def dist(a, b):
+        return math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
+
+    testLabels = []
+    for testPoint in testData:
+        # start_time = time.time()
+        testDist = []
+        for i in np.ndindex(trainData.shape[0]):
+            distU = dist(testPoint, [trainData[i][0], trainData[i][1]])
+            window = dist(testPoint, [trainData[k+1][0], trainData[k+1][1]])
+
+            testDist.append([reactangleCore(distU/window), trainData[i][2]])
+
+        stat = [0 for i in range(numberOfClasses)]
+        filteredTestDist = [x for x in testDist if x[0] >= 0.5]
+
+        for d in sorted(filteredTestDist):
+            stat[d[1]] += 1
+
+        # print(stat)
+        testLabels.append(
+            sorted(zip(stat, range(numberOfClasses)), reverse=True)[0][1])
+        # print("%s seconds" % (time.time() - start_time))
+    return testLabels
 
 
 def main():
     data = readCSVData("data1.csv")
     # print(data)
-    # showData(data[:100])
 
-    trainData, testData = splitTrainTest(data[:100], 0.333333)
-    classifyKNN(trainData, testData, 2, 2)
+    trainData, testData = splitTrainTest(data[:5000], 0.333333)
+    # showData(trainData)
+    # showData(testData)
+
+    testLabels = classifyPWRWS(trainData, testData, 5, 2)
+    result = [[testData[i][0], testData[i][1], testLabels[i]]
+              for i, _ in enumerate(testData)]
+
+    showData(result)
 
 
 if __name__ == "__main__":
