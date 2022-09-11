@@ -3,9 +3,9 @@ from lab1 import *
 
 
 def main():
-    data = readCSVData("data1.csv")[:10000]
+    data = readCSVData("data1.csv")
 
-    trainData, testData = splitTrainTest(data, 0.333333)
+    trainData, testData = splitTrainTest(data, 0.3)
 
     start_time = time.time()
     testLabels = classifyPWRWS(trainData, testData, 2, 2)
@@ -18,6 +18,7 @@ def main():
 
     result = [[testData[i][0], testData[i][1], testLabels[i]]
               for i in range(len(testData))]
+
     showData(result)
 
 

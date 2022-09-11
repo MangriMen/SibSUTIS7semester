@@ -50,19 +50,19 @@ def dist(a, b):
 def classifyPWRWS(trainData, testData, k, numberOfClasses):
     testLabels = []
     for testPoint in testData:
-        testDist = []
-        for i in np.ndindex(trainData.shape[0]):
-            distU = dist(testPoint, [trainData[i][0], trainData[i][1]])
-            window = dist(testPoint, [trainData[k+1][0], trainData[k+1][1]])
+        distances = np.array([(dist(testPoint, trainPoint[:-1]), trainPoint[2])
+                              for trainPoint in trainData], dtype=[('distance', float), ('class', int)])
+        distances.sort(order='distance')
 
-            testDist.append((reactangleCore(distU/window), trainData[i][2]))
+        test_distances = np.array([(reactangleCore(
+            distant[0]/dist(testPoint, trainData[k+1][:-1])), distant[1]) for distant in distances[:k]])
 
-        stat = [0 for i in range(numberOfClasses)]
-        filteredTestDist = np.array([x for x in testDist if x[0] >= 0.5])
+        stat = np.array([0 for _ in range(numberOfClasses)])
+        filtered_test_dist = np.array(test_distances[test_distances[0] >= 0.5])
 
-        for d in filteredTestDist:
+        for d in filtered_test_dist:
             stat[int(d[1])] += 1
 
         testLabels.append(
             sorted(zip(stat, range(numberOfClasses)), reverse=True)[0][1])
-    return testLabels
+    return np.array(testLabels)
