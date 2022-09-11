@@ -1,0 +1,31 @@
+1.
+SELECT sal.snum, CONCAT(ord.amt * 0.85, ' евро') amt, sal.sname, sal.comm FROM ord, sal
+WHERE ord.snum = sal.snum AND ord.odate = '2022-08-03';
+
+2.
+SELECT ord.onum, sal.sname, cust.cname, sal.city FROM ord, sal, cust
+WHERE sal.snum = ord.snum AND cust.cnum = ord.cnum
+AND sal.city IN ("London", "Rome") AND cust.city IN ("London", "Rome")
+ORDER BY ord.onum;
+
+3.
+SELECT sal.sname, SUM(ord.amt) 'amt sum', sal.comm * SUM(ord.amt) comm FROM sal, ord
+WHERE ord.snum = sal.snum AND ord.odate < "2022-08-05" GROUP BY sal.sname, sal.comm;
+
+4.
+SELECT ord.onum, ord.odate, sal.sname, cust.cname FROM ord, sal, cust
+WHERE sal.snum = ord.snum AND cust.cnum = ord.cnum;
+
+5.
+SELECT first.cnum, second.cnum, first.rating FROM cust first, cust second 
+WHERE first.cnum < second.cnum AND first.rating > 100;
+
+6.
+SELECT sal.sname FROM sal
+WHERE sal.sname IN (SELECT sal.sname FROM sal, cust WHERE sal.snum = cust.snum AND cust.rating > 100);
+
+7.
+SELECT sal.sname, SUM(ord.amt) FROM ord, sal
+WHERE ord.snum = sal.snum
+AND (SELECT SUM(ord.amt) FROM ord WHERE ord.snum = sal.snum) > (SELECT MIN(ord.amt) FROM ord)
+GROUP BY sal.sname;
