@@ -1,0 +1,19 @@
+1. Вывести все заказы с именами продавцов используя INNER JOIN
+SELECT DISTINCT sal.sname, ord.*
+FROM ord INNER JOIN sal ON ord.snum = sal.snum
+
+2. Используя CROSS JOIN создать запрос для вывода пар покупатель, город и продавец, город.
+SELECT DISTINCT cust.cname, cust.city, sal.sname, sal.city
+FROM cust CROSS JOIN sal ON cust.snum = sal.snum
+
+3. Используя LEFT OUTER JOIN вывести номер заказа, имя покупателя, горд покупателя, сумма заказа, дата заказа
+SELECT DISTINCT ord.onum, cust.cname, cust.city, ord.amt, ord.odate
+FROM cust LEFT OUTER JOIN ord ON ord.cnum = cust.cnum ORDER BY ord.onum
+
+4. Используя RIGHT OUTER JOIN вывести имя покупателя, город покупателя, имя продавца, город продавца, комиссию продавца. Покупатели должны быть из Лондона, а комиссия у продавца не больше 0.13
+SELECT DISTINCT cust.*, sal.*
+FROM cust RIGHT OUTER JOIN sal ON sal.snum = cust.snum AND sal.comm < 0.13 WHERE cust.city = "London"
+
+5. Используя FULL OUTER JOIN (UNION ALL) вывести имена всех продавцов и покупателей и их города.
+SELECT cust.cname, cust.city
+FROM cust UNION ALL SELECT sal.sname, sal.city FROM sal
