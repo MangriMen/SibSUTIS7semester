@@ -57,6 +57,19 @@ public:
 		return complex;
 	}
 
+	bool operator==(const Complex& rhs) const {
+		return _real == rhs._real && _img == rhs._img;
+	}
+
+	bool operator!=(const Complex& rhs) const {
+		return _real != rhs._real || _img != rhs._img;
+	}
+
+	//bool operator>(const Complex& rhs) {
+	//	return _real == rhs._real && _img == rhs._img;
+	//}
+
+
 	Complex pow(const Complex& complex_, long long n = 2)
 	{
 		long double result1 = std::atan2(complex_._img, complex_._real);
@@ -82,11 +95,9 @@ public:
 		}
 		else if (_real < 0) {
 			return std::atan(_img / _real) + PI / 2;
-
 		}
 		else if (_real == 0 && _img > 0) {
 			return PI / 2;
-
 		}
 		else if (_real == 0 && _img < 0) {
 			return -PI / 2;
@@ -104,7 +115,9 @@ public:
 	Complex root(long long n, long long i) {
 		std::vector<Complex> roots(n);
 		long double phiSqrt = std::pow(abs(), 1 / n);
-		for (size_t k = 0; k < roots.size(); k++)
+		for (size_t k = 0;
+			k < roots.size();
+			k++)
 		{
 			long double coeff = 2 * PI * k;
 			roots[k] = Complex(phiSqrt, 0) * Complex(std::cos((angleRad() + coeff) / n), std::sin((angleRad() + coeff) / n));
