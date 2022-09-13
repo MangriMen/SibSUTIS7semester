@@ -5,8 +5,8 @@
 #include <stdbool.h>
 
 void resume_terminal() {
-    printf("\033[39");
-	printf("\033[49");
+    printf("\033[=39F");
+	printf("\033[=32G");
 	printf("\033[?25h");
 	printf("\033[2J");
 }
@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
     signal(SIGINT, sigint_handler);
 
     printf("\033[?25l");
-	printf("\033[=%dG", color);
+	printf("\033[=%dF", color);
 	printf("\033[2J");
 	fflush(stdout);
 
