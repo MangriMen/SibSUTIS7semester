@@ -152,7 +152,7 @@ public:
 
 		return out.str();
 	}
-
+  
 	bool operator==(const Fraction& rhs) const {
 		return isEqual(rhs);
 	}
