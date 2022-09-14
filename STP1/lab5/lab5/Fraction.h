@@ -153,7 +153,9 @@ public:
 		return out.str();
 	}
 
-	friend bool operator==(const Fraction&, const Fraction&);
+	bool operator==(const Fraction& rhs) const {
+		return isEqual(rhs);
+	}
 
 	friend std::ostream& operator<<(std::ostream&, const Fraction&);
 };
