@@ -10,5 +10,8 @@
     <?for ($i = 1; $i <= 3; $i++) {?>
         <a href="task<?echo $i?>.php" style="grid-column: <?echo $i?>;">Task <?echo $i?></a>
     <?}?>
+
+    <a href="task4a.html" style="grid-column: 4;">Task 4</a>
+    <a href="task5a.html" style="grid-column: 4;">Task 5</a>
 </body>
 </html>
