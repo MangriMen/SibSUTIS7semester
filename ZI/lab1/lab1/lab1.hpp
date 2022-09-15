@@ -5,7 +5,7 @@
 namespace crypto {
 	class FastMath {
 	public:
-		static long long modExp(long long a, long long x, long long p);
+		static unsigned long long modExp(unsigned long long a, unsigned long long x, unsigned long long p);
 	};
 
 	class DiffieHellman {
@@ -22,7 +22,6 @@ namespace crypto {
 
 	class BabyGiantStep {
 	public:
-		static std::vector<long long> calculate(long long a, long long p,
-			long long y);
+		static std::vector<unsigned long long> calculate(unsigned long long a, unsigned long long p, unsigned long long y);
 	};
 } // namespace crypto

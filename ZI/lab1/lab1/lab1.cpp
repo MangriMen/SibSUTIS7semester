@@ -6,15 +6,13 @@
 #include <array>
 
 namespace crypto {
-	long long FastMath::modExp(long long a, long long x, long long p) {
-		a %= p;
-		long long result = 1;
-		while (x > 0) {
-			if (x & 1) result = (result * a) % p;
-			a = (a * a) % p;
-			x >>= 1;
-		}
-		return result;
+	unsigned long long FastMath::modExp(unsigned long long a, unsigned long long x, unsigned long long p) {
+		if (x == 0)
+			return 1;
+		if (x % 2 == 1)
+			return a * modExp(a, x - 1, p) % p;
+		else
+			return modExp(a * a % p, x / 2, p) % p;
 	}
 
 	bool DiffieHellman::isPrime(long long p) {
@@ -117,27 +115,24 @@ namespace crypto {
 		return std::array<long long, 3>{a, x1 < 0 ? x1 + tempN : x1, y1};
 	}
 
-	std::vector<long long> BabyGiantStep::calculate(long long a, long long p, long long y) {
-		long long m = 0;
-		long long k = 0;
-		do {
-			m = static_cast<long long>(sqrt(p) + 1);
-			k = static_cast<long long>(sqrt(p) + 1);
-		} while (m * k <= p);
+	std::vector<unsigned long long> BabyGiantStep::calculate(unsigned long long a, unsigned long long p, unsigned long long y) {
+		auto n = static_cast<unsigned long long>(ceil(sqrt(y - 1)));
 
-		std::vector<long long> results;
-		std::map<long long, std::vector<long long>> rowY;
+		std::vector<unsigned long long> results;
 
-		for (long long j = 0; j < m; j++) {
-			if (!rowY.count(static_cast<long long>(pow(a, j) * y) % p)) {
-				rowY[static_cast<long long>(pow(a, j) * y) % p].push_back(j);
-			}
+		std::map<unsigned long long, std::vector<unsigned long long>> row;
+		for (unsigned long long i = 0; i < n; i++) {
+			row[FastMath::modExp(a, i, y)].push_back(i);
 		}
 
-		for (long long i = 1; i <= k; i++) {
-			if (rowY.count(static_cast<long long>(pow(a, i * m)) % p)) {
-				for (const auto& x : rowY.at(static_cast<long long>(pow(a, i* m)) % p)) {
-					results.push_back(i * m - x);
+		unsigned long long c = FastMath::modExp(a, n * (y - 2), y);
+
+		for (unsigned long long i = 0; i < n; i++) {
+			unsigned long long temp = (p * FastMath::modExp(c, i, y)) % y;
+			if (row.count(temp))
+			{
+				for (const auto& j : row.at(temp)) {
+					results.push_back(i * n + j);
 				}
 			}
 		}
