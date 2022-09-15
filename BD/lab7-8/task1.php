@@ -18,18 +18,21 @@ $rez = array_merge($treug, $kvd);
             <?foreach ($treug as &$value) {
                 echo $value . "&nbsp&nbsp";
             }?>
+            :$treug
         </span>
 
         <span>
-        <?foreach ($kvd as &$value) {
+            <?foreach ($kvd as &$value) {
                 echo $value . "&nbsp&nbsp";
             }?>
+            :$kvd
         </span>
 
         <span>
             <?foreach ($rez as &$value) {
                 echo $value . "&nbsp&nbsp";
             }?>
+            :$rez
         </span>
 
         <?sort($rez);?>
@@ -38,14 +41,16 @@ $rez = array_merge($treug, $kvd);
             <?foreach ($rez as &$value) {
                 echo $value . "&nbsp&nbsp";
             }?>
+            :sorted $rez
         </span>
         
         <?unset($rez[1]);?>
 
-        <span>
+        <span> 
             <?foreach ($rez as &$value) {
                 echo $value . "&nbsp&nbsp";
             }?>
+            :removed 1 el
         </span>
 
         <?$rez1 = array_unique($rez);?>
@@ -54,6 +59,7 @@ $rez = array_merge($treug, $kvd);
             <?foreach ($rez1 as &$value) {
                 echo $value . "&nbsp&nbsp";
             }?>
+             :removed unique
         </span>
 
         <??>
