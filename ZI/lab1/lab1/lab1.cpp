@@ -7,23 +7,14 @@
 
 namespace crypto {
 	long long FastMath::modExp(long long a, long long x, long long p) {
-		long long y = 1;
-		long long s = a;
-
-		std::vector<long long> xVec;
-		long long tempX = x;
-		while (tempX) {
-			xVec.push_back(tempX /= 2);
+		a %= p;
+		long long result = 1;
+		while (x > 0) {
+			if (x & 1) result = (result * a) % p;
+			a = (a * a) % p;
+			x >>= 1;
 		}
-
-		for (long long i = xVec.size() - 1; i >= 0; i--) {
-			if (xVec[i] == 1) {
-				y = (y * s) % p;
-			}
-			s = (s * s) % p;
-		}
-
-		return y;
+		return result;
 	}
 
 	bool DiffieHellman::isPrime(long long p) {
@@ -126,12 +117,7 @@ namespace crypto {
 		return std::array<long long, 3>{a, x1 < 0 ? x1 + tempN : x1, y1};
 	}
 
-	std::vector<long long> BabyGiantStep::calculate(long long a, long long p,
-		long long y) {
-		std::random_device dev;
-		std::mt19937 rng(dev());
-		std::uniform_int_distribution<std::mt19937::result_type> dist(0, 1);
-
+	std::vector<long long> BabyGiantStep::calculate(long long a, long long p, long long y) {
 		long long m = 0;
 		long long k = 0;
 		do {
@@ -139,26 +125,21 @@ namespace crypto {
 			k = static_cast<long long>(sqrt(p) + 1);
 		} while (m * k <= p);
 
-		std::vector<std::array<int, 2>> jiVec;
-		std::map<long long, int> rowY;
+		std::vector<long long> results;
+		std::map<long long, std::vector<long long>> rowY;
 
-		for (int j = 0; j < m; j++) {
+		for (long long j = 0; j < m; j++) {
 			if (!rowY.count(static_cast<long long>(pow(a, j) * y) % p)) {
-				rowY[static_cast<long long>(pow(a, j) * y) % p] = j;
+				rowY[static_cast<long long>(pow(a, j) * y) % p].push_back(j);
 			}
 		}
 
-		for (int i = 1; i <= k; i++) {
+		for (long long i = 1; i <= k; i++) {
 			if (rowY.count(static_cast<long long>(pow(a, i * m)) % p)) {
-				jiVec.push_back(std::array<int, 2>{
-					rowY.at(static_cast<long long>(pow(a, i* m)) % p), i});
-				break;
+				for (const auto& x : rowY.at(static_cast<long long>(pow(a, i* m)) % p)) {
+					results.push_back(i * m - x);
+				}
 			}
-		}
-
-		std::vector<long long> results(jiVec.size());
-		for (size_t i = 0; i < jiVec.size(); i++) {
-			results[i] = jiVec[i][1] * m - jiVec[i][0];
 		}
 
 		return results;

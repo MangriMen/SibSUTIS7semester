@@ -10,9 +10,13 @@ int main() {
 	std::random_device dev;
 	std::mt19937 rng(dev());
 	std::uniform_int_distribution<std::mt19937::result_type> dist(
-		1, static_cast<long long>(1e9));
+		1, static_cast<long long>(1e3));
 
-	auto modExp_result = FastMath::modExp(dist(rng), dist(rng), dist(rng));
+	auto aM = dist(rng);
+	auto xM = dist(rng);
+	auto pM = dist(rng);
+	cout << aM << " " << xM << " " << pM << "\n";
+	auto modExp_result = FastMath::modExp(aM, xM, pM);
 	cout << "Module Exp: " << modExp_result << "\n";
 
 	auto gcd_result = Euclid::getExtendedGCD(dist(rng), dist(rng));
@@ -22,19 +26,34 @@ int main() {
 	auto generateDiffieHellmanKey_result = DiffieHellman::generateKey();
 	cout << "Diffie Hellman: " << generateDiffieHellmanKey_result << "\n";
 
-	int size = 0;
-	do
-	{
-		auto babyGiantStep_result =
-			BabyGiantStep::calculate(dist(rng), dist(rng), dist(rng));
-		//cout << "Baby Giant Step: "
-		//	<< "\n";
+	auto a = 0ll;
+	auto p = 0ll;
+	auto y = dist(rng);
+	do {
+		a = dist(rng);
+		p = dist(rng);
+	} while (Euclid::getExtendedGCD(a, p)[0] != 1);
 
-		//for (const auto& result : babyGiantStep_result) {
-		//	cout << result << " ";
-		//}
-		//cout << "\n";
+	auto babyGiantStep_result =
+		BabyGiantStep::calculate(a, p, y);
+	
+	for (const auto& result : babyGiantStep_result) {
+		if (y == FastMath::modExp(a, result, p)) {
+			cout << "OK ";
+		}
+		else {
+			//cout << "ERROR ";
+			//return -1;
+		}
+	}
 
-		size = babyGiantStep_result.size();
-	} while (size < 2);
+	cout << "Baby Giant Step: \n";
+
+	cout << "S: " << babyGiantStep_result.size() << "\n";
+	cout << "Press enter key to print results...\n";
+	cin.get();
+	for (const auto& result : babyGiantStep_result) {
+		cout << result << " ";
+	}
+	cout << "\n";
 }
