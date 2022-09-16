@@ -21,7 +21,6 @@ public sealed partial class MainPage : Page
 
     private int SequenceLenght
     {
-
         get; set;
     } = 1;
 
@@ -54,7 +53,7 @@ public sealed partial class MainPage : Page
             foreach (var sequence in sequences)
             {
                 var line = Regex.Replace(sequence.Value, "[A-Z]", "");
-                if (line.EndsWith("->"))
+                if (line.EndsWith("->") && line.Length == SequenceLenght + 2)
                 {
                     sequencesOut.AppendLine(line.Replace("->", "λ"));
                 }
