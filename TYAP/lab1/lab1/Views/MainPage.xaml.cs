@@ -1,30 +1,39 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Data;
-using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using lab1.ViewModels;
 
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Shapes;
-using Windows.Perception.Spatial;
-using Windows.Storage.Pickers;
 
 namespace lab1.Views;
 
-public sealed partial class MainPage : Page
+public sealed partial class MainPage : Page, INotifyPropertyChanged
 {
     private string RawGrammar
     {
         get; set;
     } = "S: aA | bS | ->\r\nA: bS";
 
-    private int SequenceLenght
+    private const string START_TERMINATE_SYMBOL = "S";
+    private const string EMPTY_SYMBOL = "->";
+
+    private int _sequenceLength = 2;
+
+    private int SequenceLength
     {
-        get; set;
-    } = 1;
+        get => _sequenceLength;
+        set
+        {
+            _sequenceLength = value;
+            PropertyChanged(this, new PropertyChangedEventArgs(nameof(SequenceLength)));
+        }
+    }
 
     private Dictionary<string, List<string>> _grammar = new();
+
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public MainViewModel ViewModel
     {
@@ -37,25 +46,20 @@ public sealed partial class MainPage : Page
         InitializeComponent();
     }
 
-    private async void OpenFileClick(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
-    {
-
-    }
-
     private void StartClick(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         try
         {
             _grammar = ParseGrammar(RawGrammar);
-            var sequences = GenerateSequences(_grammar, SequenceLenght);
+            var sequences = GenerateSequences(_grammar, SequenceLength);
 
             var sequencesOut = new StringBuilder();
             foreach (var sequence in sequences)
             {
                 var line = Regex.Replace(sequence.Value, "[A-Z]", "");
-                if (line.EndsWith("->") && line.Length == SequenceLenght + 2)
+                if (line.EndsWith(EMPTY_SYMBOL) && line.Length == SequenceLength + 2)
                 {
-                    sequencesOut.AppendLine(line.Replace("->", "λ"));
+                    sequencesOut.AppendLine(line.Replace(EMPTY_SYMBOL, "λ"));
                 }
             }
 
@@ -73,8 +77,6 @@ public sealed partial class MainPage : Page
 
             _ = dlg.ShowAsync();
         }
-
-        //PrintDebug();
     }
 
     public static Dictionary<string, List<string>> ParseGrammar(string rawGrammar)
@@ -86,9 +88,9 @@ public sealed partial class MainPage : Page
         {
             foreach (var line in lines)
             {
-                var tokens = line.Split(":");
+                var tokens = line.Split(':');
                 var rule = tokens[0];
-                var variants = tokens[1].Split("|");
+                var variants = tokens[1].Split('|');
 
                 newGrammar.TryAdd(rule, new());
                 foreach (var variant in variants)
@@ -107,13 +109,12 @@ public sealed partial class MainPage : Page
 
     public static Dictionary<int, string> GenerateSequences(Dictionary<string, List<string>> grammar, int sequenceLength)
     {
-        var root = new TreeNode<string>("S");
+        var root = new TreeNode<string>(START_TERMINATE_SYMBOL);
         root.AddChildren(grammar[root.Value].ToArray());
-
         FillTree(root, grammar, sequenceLength);
 
         Dictionary<int, string> sequences = new();
-
+        var prevSequence = "";
         var prevLevel = -1;
         var prevIndex = 0;
         var index = 0;
@@ -121,26 +122,17 @@ public sealed partial class MainPage : Page
         {
             sequences.TryAdd(index, "");
 
-            if (level < prevLevel)
+            if (level <= prevLevel)
             {
                 prevIndex = index;
                 index++;
-                sequences.TryAdd(index, "");
-                sequences[index] = sequences[prevIndex].Remove(sequences[prevIndex].Length - (prevLevel - level + 1) * 2);
-            }
-            else if (level == prevLevel)
-            {
-                prevIndex = index;
-                index++;
-                sequences.TryAdd(index, "");
-                sequences[index] = sequences[prevIndex].Remove(sequences[prevIndex].Length - 2);
+                prevSequence = sequences[prevIndex].Remove(sequences[prevIndex].Length - (prevLevel - level + 1) * 2);
+                sequences.TryAdd(index, prevSequence);
             }
 
             sequences[index] += nodeValue;
 
             prevLevel = level;
-
-            Debug.WriteLine($"{new string('\t', level)} {nodeValue}");
         }));
 
         return sequences;
@@ -155,67 +147,53 @@ public sealed partial class MainPage : Page
 
         foreach (var node in root.Children)
         {
-            var rule = node.Value;
-            if (rule.Contains("->"))
+            if (node.Value.Contains(EMPTY_SYMBOL))
             {
                 return;
             }
-            node.AddChildren(grammar[Regex.Replace(rule, @"[a-z]", "")].ToArray());
+            node.AddChildren(grammar[Regex.Replace(node.Value, @"[a-z]", "")].ToArray());
             FillTree(node, grammar, sequenceLength, count + 1);
-        }
-    }
-
-    public void PrintDebug()
-    {
-        var grammarOut = new StringBuilder();
-        foreach (var item in _grammar)
-        {
-            _ = grammarOut.Append($"{item.Key}: ");
-            foreach (var variant in item.Value)
-            {
-                _ = grammarOut.Append($"{variant.Replace("->", "λ")} | ");
-            }
-            grammarOut.Remove(grammarOut.Length - 2, 2);
-            _ = grammarOut.Append("\n");
-        }
-
-        var dlg = new ContentDialog()
-        {
-            Title = "Грамматика",
-            Content = grammarOut.ToString(),
-            CloseButtonText = "Закрыть",
-            XamlRoot = XamlRoot
-        };
-
-        _ = dlg.ShowAsync();
-    }
-
-    private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        var prevValue = SequenceLenght;
-        try
-        {
-            SequenceLenght = int.Parse((sender as TextBox).Text);
-        }
-        catch
-        {
-            var dlg = new ContentDialog()
-            {
-                Title = "Ошибка",
-                Content = "Неверно задана длина последовательности",
-                CloseButtonText = "Закрыть",
-                XamlRoot = XamlRoot
-            };
-
-            _ = dlg.ShowAsync();
-
-            SequenceLenght = prevValue;
         }
     }
 
     private void ManualInput_TextChanged(object sender, TextChangedEventArgs e)
     {
-        RawGrammar = (sender as TextBox).Text;
+        RawGrammar = ((TextBox)sender).Text;
+    }
+
+    private void SequenceLength_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        var prevValue = SequenceLength;
+
+        try
+        {
+            SequenceLength = int.Parse(((TextBox)sender).Text);
+        }
+        catch
+        {
+            SequenceLength = prevValue;
+        }
+    }
+
+    private void SequenceLength_TextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
+    {
+        var pos = sender.SelectionStart;
+        sender.Text = new string(sender.Text.Where(char.IsDigit).ToArray());
+        sender.SelectionStart = pos;
+    }
+
+    private void SequenceLength_LostFocus(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        var prevValue = SequenceLength;
+
+        try
+        {
+            SequenceLength = int.Parse(((TextBox)sender).Text);
+        }
+        catch
+        {
+            SequenceLength = prevValue;
+        }
     }
 }
 
@@ -239,7 +217,7 @@ public class GrammarException : Exception
 public class TreeNode<T>
 {
     private readonly T _value;
-    private readonly List<TreeNode<T>> _children = new List<TreeNode<T>>();
+    private readonly List<TreeNode<T>> _children = new();
 
     public TreeNode(T value)
     {
@@ -254,26 +232,14 @@ public class TreeNode<T>
         }
     }
 
-    public TreeNode<T> Parent
+    public TreeNode<T>? Parent
     {
         get; private set;
     }
 
-    public T Value
-    {
-        get
-        {
-            return _value;
-        }
-    }
+    public T Value => _value;
 
-    public ReadOnlyCollection<TreeNode<T>> Children
-    {
-        get
-        {
-            return _children.AsReadOnly();
-        }
-    }
+    public ReadOnlyCollection<TreeNode<T>> Children => _children.AsReadOnly();
 
     public TreeNode<T> AddChild(T value)
     {
@@ -296,14 +262,18 @@ public class TreeNode<T>
     {
         action(Value);
         foreach (var child in _children)
+        {
             child.Traverse(action);
+        }
     }
 
     public void Traverse(Action<T, int> action, int level = 0)
     {
         action(Value, level);
         foreach (var child in _children)
+        {
             child.Traverse(action, level + 1);
+        }
     }
 
     public IEnumerable<T> Flatten()
