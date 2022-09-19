@@ -6,7 +6,7 @@ $db = "sample";
 
 $conn = new mysqli($server, $username, $password, $db);
 
-if ($conn->connection_error) {
+if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 ?>
