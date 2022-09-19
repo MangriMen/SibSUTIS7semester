@@ -151,7 +151,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
             {
                 return;
             }
-            node.AddChildren(grammar[Regex.Replace(node.Value, @"[a-z]", "")].ToArray());
+            node.AddChildren(grammar[Regex.Replace(node.Value, @"[0-9a-z]", "")].ToArray());
             FillTree(node, grammar, sequenceLength, count + 1);
         }
     }
