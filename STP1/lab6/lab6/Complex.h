@@ -29,6 +29,7 @@ public:
 	}
 
 	Complex operator+(const Complex& rhs) {
+		std::cout << _real + rhs._real;
 		Complex complex(_real + rhs._real, _img + rhs._img);
 		return complex;
 	}
@@ -44,7 +45,7 @@ public:
 	}
 
 	Complex operator*(const Complex& rhs) {
-		Complex complex(_real * rhs._real - _img * rhs._img, _real * _img + rhs._real * _img);
+		Complex complex(_real * rhs._real - _img * rhs._img, _real * rhs._img + rhs._real * _img);
 		return complex;
 	}
 
@@ -64,11 +65,6 @@ public:
 	bool operator!=(const Complex& rhs) const {
 		return _real != rhs._real || _img != rhs._img;
 	}
-
-	//bool operator>(const Complex& rhs) {
-	//	return _real == rhs._real && _img == rhs._img;
-	//}
-
 
 	Complex pow(const Complex& complex_, long long n = 2)
 	{
@@ -142,7 +138,9 @@ public:
 	}
 
 	std::string toString() const {
-		return realString() + "+i*" + imgString();
+		const std::string img = _img >= 0 ? imgString() : "(" + imgString() + ")";
+
+		return realString() + "+i*" + img;
 	}
 
 	friend std::ostream& operator <<(std::ostream&, const Complex&);
