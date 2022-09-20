@@ -1,11 +1,14 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using lab1.ViewModels;
 
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Shapes;
+using System;
 
 namespace lab1.Views;
 
@@ -14,20 +17,32 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
     private string RawGrammar
     {
         get; set;
-    } = "S: aA | bS | ->\r\nA: bS";
+    } = "S: (S) | ()S | ->";
 
-    private const string START_TERMINATE_SYMBOL = "S";
+    private const string START_NON_TERMINATE_SYMBOL = "S";
     private const string EMPTY_SYMBOL = "->";
+    private const int MAX_RECURSION = 10000;
 
-    private int _sequenceLength = 2;
+    private int _sequenceLengthMin = 0;
+    private int _sequenceLengthMax = 1;
 
-    private int SequenceLength
+    private int SequenceLengthMin
     {
-        get => _sequenceLength;
+        get => _sequenceLengthMin;
         set
         {
-            _sequenceLength = value;
-            PropertyChanged(this, new PropertyChangedEventArgs(nameof(SequenceLength)));
+            _sequenceLengthMin = value;
+            PropertyChanged(this, new PropertyChangedEventArgs(nameof(SequenceLengthMin)));
+        }
+    }
+
+    private int SequenceLengthMax
+    {
+        get => _sequenceLengthMax;
+        set
+        {
+            _sequenceLengthMax = value;
+            PropertyChanged(this, new PropertyChangedEventArgs(nameof(SequenceLengthMax)));
         }
     }
 
@@ -51,19 +66,20 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         try
         {
             _grammar = ParseGrammar(RawGrammar);
-            var sequences = GenerateSequences(_grammar, SequenceLength);
+            var chains = GenerateSequences(_grammar, SequenceLengthMin, SequenceLengthMax);
 
-            var sequencesOut = new StringBuilder();
-            foreach (var sequence in sequences)
+            var chainsOutput = new StringBuilder();
+            foreach (var chain in chains)
             {
-                var line = Regex.Replace(sequence.Value, "[A-Z]", "");
-                if (line.EndsWith(EMPTY_SYMBOL) && line.Length == SequenceLength + 2)
+                var line = chain;
+                //var line = Regex.Replace(string.Join("", sequence.Value), @"[A-Z]", "");
+                if (line.EndsWith(EMPTY_SYMBOL) && chain.Length >= SequenceLengthMin && chain.Length <= SequenceLengthMax)
                 {
-                    sequencesOut.AppendLine(line.Replace(EMPTY_SYMBOL, "λ"));
+                    chainsOutput.AppendLine(line.Replace(EMPTY_SYMBOL, ""));
                 }
             }
 
-            Output.Text = sequencesOut.ToString();
+            Output.Text = chainsOutput.ToString();
         }
         catch (GrammarException)
         {
@@ -107,93 +123,162 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         return newGrammar;
     }
 
-    public static Dictionary<int, string> GenerateSequences(Dictionary<string, List<string>> grammar, int sequenceLength)
+    public static List<string> GenerateSequences(Dictionary<string, List<string>> grammar, int sequenceLengthMin, int sequenceLengthMax)
     {
-        var root = new TreeNode<string>(START_TERMINATE_SYMBOL);
-        root.AddChildren(grammar[root.Value].ToArray());
-        FillTree(root, grammar, sequenceLength);
+        var chains = new List<string>();
+        var uncompletedChains = new List<string>();
 
-        Dictionary<int, string> sequences = new();
-        var prevSequence = "";
-        var prevLevel = -1;
-        var prevIndex = 0;
-        var index = 0;
-        root.Traverse(new Action<string, int>((nodeValue, level) =>
+        foreach (var ruleSequence in grammar[START_NON_TERMINATE_SYMBOL])
         {
-            sequences.TryAdd(index, "");
-
-            if (level <= prevLevel)
+            var isValid = Is_valid(ruleSequence, grammar, sequenceLengthMin, sequenceLengthMax);
+            if (isValid == 0 && ruleSequence.Length >= sequenceLengthMin)
             {
-                prevIndex = index;
-                index++;
-                prevSequence = sequences[prevIndex].Remove(sequences[prevIndex].Length - (prevLevel - level + 1) * 2);
-                sequences.TryAdd(index, prevSequence);
+                chains.Add(ruleSequence);
             }
-
-            sequences[index] += nodeValue;
-
-            prevLevel = level;
-        }));
-
-        return sequences;
-    }
-
-    public static void FillTree(TreeNode<string> root, Dictionary<string, List<string>> grammar, int sequenceLength, int count = 0)
-    {
-        if (count >= sequenceLength)
-        {
-            return;
+            else if (isValid == -2)
+            {
+                uncompletedChains.Add(ruleSequence);
+            }
         }
 
-        foreach (var node in root.Children)
+        var tempChain = new StringBuilder();
+        var count = 0;
+        while (count < MAX_RECURSION && uncompletedChains.Count > 0)
         {
-            if (node.Value.Contains(EMPTY_SYMBOL))
+            var newUncompletedChains = new List<string>();
+            count++;
+            foreach (var uncompletedChain in uncompletedChains)
             {
-                return;
+                tempChain.Clear();
+                for (var i = 0; i < uncompletedChain.Length; i++)
+                {
+                    if (!grammar.ContainsKey(uncompletedChain[i].ToString()))
+                    {
+                        tempChain.Append(uncompletedChain[i]);
+                    }
+                    else
+                    {
+                        foreach (var ruleSequence in grammar[uncompletedChain[i].ToString()])
+                        {
+                            var res = string.Concat(tempChain.ToString(), ruleSequence, uncompletedChain.AsSpan(i + 1));
+
+                            var isValid = Is_valid(res, grammar, sequenceLengthMin, sequenceLengthMax);
+                            if (isValid == 0)
+                            {
+                                if (chains.Contains(res == "" ? "" : res) || res.Length < sequenceLengthMin)
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    chains.Add(res == "" ? "" : res);
+                                }
+                            }
+                            else if (isValid == -2)
+                            {
+                                newUncompletedChains.Add(res);
+                            }
+                        }
+                        break;
+                    }
+                }
             }
-            node.AddChildren(grammar[Regex.Replace(node.Value, @"[0-9a-z]", "")].ToArray());
-            FillTree(node, grammar, sequenceLength, count + 1);
+            uncompletedChains.Clear();
+            uncompletedChains = newUncompletedChains.Distinct().ToList();
         }
+
+        return chains;
     }
+
+    public static bool IsCompletedSequence(string sequence)
+    {
+        return !Regex.Match(sequence, @"[A-Z]").Success;
+    }
+
+    private static int Is_valid(string line, Dictionary<string, List<string>> grammar, int min_chain_length, int max_chain_length)
+    {
+        int term_sym = 0;
+        int non_term_sym = 0;
+        foreach (char ch in line)
+        {
+            if (!grammar.ContainsKey(ch.ToString()))
+            {
+                term_sym++;
+            }
+            else
+            {
+                non_term_sym++;
+            }
+        }
+
+        if (term_sym > max_chain_length)
+        {
+            return -1;
+        }
+        if ((term_sym + non_term_sym - 5) > max_chain_length)
+        {
+            return -1;
+        }
+        return (non_term_sym > 0) ? -2 : 0;
+    }
+
+    //public static Dictionary<int, List<string>> GenerateSequences(Dictionary<string, List<string>> grammar, int sequenceLength)
+    //{
+    //    var root = new TreeNode<string>(START_NON_TERMINATE_SYMBOL);
+    //    root.AddChildren(grammar[root.Value].ToArray());
+    //    FillTree(root, grammar, sequenceLength);
+
+    //    Dictionary<int, List<string>> sequences = new();
+    //    var prevSequence = new List<string>();
+    //    var prevLevel = -1;
+    //    var prevIndex = 0;
+    //    var index = 0;
+    //    root.Traverse(new Action<string, int>((nodeValue, level) =>
+    //    {
+    //        sequences.TryAdd(index, new());
+
+    //        if (level <= prevLevel)
+    //        {
+    //            prevIndex = index;
+    //            index++;
+    //            prevSequence = sequences[prevIndex].ToList();
+    //            prevSequence.RemoveAt(sequences[prevIndex].Count - (prevLevel - level + 1));
+    //            sequences.TryAdd(index, prevSequence);
+    //        }
+
+    //        sequences[index].Add(nodeValue);
+
+    //        prevLevel = level;
+    //    }));
+
+    //    return sequences;
+    //}
+
+    //public static void FillTree(TreeNode<string> root, Dictionary<string, List<string>> grammar, int sequenceLength, int count = 0)
+    //{
+    //    if (count >= sequenceLength)
+    //    {
+    //        return;
+    //    }
+
+    //    foreach (var node in root.Children)
+    //    {
+    //        if (node.Value.Contains(EMPTY_SYMBOL))
+    //        {
+    //            return;
+    //        }
+    //        var rules = Array.FindAll(Regex.Split(node.Value, @"[^A-Z]"), rl => !string.IsNullOrEmpty(rl));
+    //        foreach (var rule in rules)
+    //        {
+    //            node.AddChildren(grammar[rule].ToArray());
+    //            FillTree(node, grammar, sequenceLength, ++count);
+    //        }
+    //    }
+    //}
 
     private void ManualInput_TextChanged(object sender, TextChangedEventArgs e)
     {
         RawGrammar = ((TextBox)sender).Text;
-    }
-
-    private void SequenceLength_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        var prevValue = SequenceLength;
-
-        try
-        {
-            SequenceLength = int.Parse(((TextBox)sender).Text);
-        }
-        catch
-        {
-            SequenceLength = prevValue;
-        }
-    }
-
-    private void SequenceLength_TextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
-    {
-        var pos = sender.SelectionStart;
-        sender.Text = new string(sender.Text.Where(char.IsDigit).ToArray());
-        sender.SelectionStart = pos;
-    }
-
-    private void SequenceLength_LostFocus(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
-    {
-        var prevValue = SequenceLength;
-
-        try
-        {
-            SequenceLength = int.Parse(((TextBox)sender).Text);
-        }
-        catch
-        {
-            SequenceLength = prevValue;
-        }
     }
 }
 

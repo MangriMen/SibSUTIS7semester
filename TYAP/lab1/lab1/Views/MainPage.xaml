@@ -50,15 +50,24 @@
             <StackPanel
                 Grid.Row="2"
                 Grid.Column="0"
-                Orientation="Horizontal"
+                HorizontalAlignment="Left"
+                Orientation="Vertical"
                 Spacing="8">
                 <TextBlock VerticalAlignment="Center" Text="Длина цепочки" />
-                <TextBox
-                    LosingFocus="SequenceLength_LostFocus"
-                    Text="{x:Bind SequenceLength, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                    TextAlignment="Center"
-                    TextChanged="SequenceLength_TextChanged"
-                    TextChanging="SequenceLength_TextChanging" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <NumberBox
+                        Header="От"
+                        LargeChange="10"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Compact"
+                        Value="{x:Bind SequenceLengthMin, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <NumberBox
+                        Header="До"
+                        LargeChange="10"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Compact"
+                        Text="{x:Bind SequenceLengthMax, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
             </StackPanel>
             <Button
                 Grid.Row="3"
