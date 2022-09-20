@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      table {
+        text-align: center;
+        border-spacing: 0.2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      td:nth-child(1) {
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+    <form action="task2.php">
+      <table>
+        <thead>
+          <tr>
+            <th>Таблицы</th>
+            <th colspan="2">Отобразить</th>
+          </tr>
+          <tr>
+            <th></th>
+            <th>структуру</th>
+            <th>содержимое</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Продавцы (sal)</td>
+            <td><input type="checkbox" /></td>
+            <td><input type="checkbox" /></td>
+          </tr>
+          <tr>
+            <td>Покупатели (cust)</td>
+            <td><input type="checkbox" /></td>
+            <td><input type="checkbox" /></td>
+          </tr>
+          <tr>
+            <td>Заказы (ord)</td>
+            <td><input type="checkbox" /></td>
+            <td><input type="checkbox" /></td>
+          </tr>
+        </tbody>
+      </table>
+      <button type="submit">Вывести!</button>
+    </form>
+  </body>
+</html>
