@@ -17,16 +17,33 @@ $result = mysqli_query($conn, 'SELECT * FROM notebook_br1');
     th, td {
         padding: 0.5rem;
     }
+
+    .wrapper {
+        display: flex;
+        justify-content: center;
+    }
 </style>
 
-<table>
-    <?foreach ($result as $row) {?>
-        <tr>
-            <?foreach ($row as $el) {?>
-                <td>
-                    <?echo $el?>
-                </td>
-            <?}?>
-        </tr>
-    <?}?>
-</table>
+<div class="wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>City</th>
+                <th>Address</th>
+                <th>Birthday</th>
+                <th>Mail</th>
+            </tr>
+        </thead>
+        <?foreach ($result as $row) {?>
+            <tr>
+                <?foreach ($row as $el) {?>
+                    <td>
+                        <?echo $el?>
+                    </td>
+                <?}?>
+            </tr>
+        <?}?>
+    </table>
+<div>
