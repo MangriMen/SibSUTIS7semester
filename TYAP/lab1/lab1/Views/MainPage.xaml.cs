@@ -191,11 +191,6 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         return chains;
     }
 
-    public static bool IsCompletedSequence(string sequence)
-    {
-        return !Regex.Match(sequence, @"[A-Z]").Success;
-    }
-
     private static int Is_valid(string line, Dictionary<string, List<string>> grammar, int min_chain_length, int max_chain_length)
     {
         var term_sym = 0;
