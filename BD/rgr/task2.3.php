@@ -6,6 +6,10 @@ $column = array_key_exists('column', $_GET) ? $_GET['column'] : '';
 function display_column($db_connect, $column) {
     $result = $db_connect->query('SELECT ' . $column . ' FROM T3;');
 
+    if (!$result) {
+        return;
+    }
+
     print "<table>\n";
         print "<thead>\n";
             print "<th>$column</th>\n";

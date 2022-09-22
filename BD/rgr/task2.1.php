@@ -1,6 +1,12 @@
 <?
 require('db_connect.php');
 
+$result = $conn->query('DROP TABLE IF EXISTS T3;');
+
+if (!$result) {
+    die("Error when removing table");
+}
+
 $result = $conn->query('CREATE TABLE IF NOT EXISTS T3 (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     Название CHAR(20),
@@ -9,7 +15,7 @@ $result = $conn->query('CREATE TABLE IF NOT EXISTS T3 (
     );');
 
 if (!$result) {
-    die("Error when creating table;");
+    die("Error when creating table");
 }
 
 $result = $conn->query('INSERT INTO T3 (
@@ -28,7 +34,7 @@ VALUES
 (10, "XML", "Сценарн", "Borland");');
 
 if (!$result) {
-    die("Error when filling table;" . $conn->error);
+    die("Error when filling table");
 }
 
 ?>
