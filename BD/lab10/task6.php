@@ -1,3 +1,5 @@
 <?php
-$conn->close();
+if ($conn) {
+    $conn->close();
+}
 ?>

@@ -7,6 +7,6 @@
     <title>Document</title>
 </head>
 <body>
-    <a href="task1a.html" style="grid-column: 4;">Task 1</a>
+    <a href="task1.html" style="grid-column: 4;">Task 1</a>
 </body>
 </html>
