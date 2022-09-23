@@ -1,130 +1,107 @@
 #include "pch.h"
 #include "framework.h"
-#include "lab2.h"
+#include "lab2.hpp"
+#include <fstream>
 
-long long modExp(long long x, long long y, long long N)
-{
-	if (y == 0) {
-		return 1;
-	}
+using namespace crypto;
 
-	long long z = modExp(x, y / 2, N);
-
-	if (y % 2 == 0) {
-		return (z * z) % N;
-	}
-	return (x * z * z) % N;
-}
-
-bool miillerTest(long long d, long long n)
-{
-	// Pick a random number in [2..n-2]
-	// Corner cases make sure that n > 4
-	long long a = 2 + rand() % (n - 4);
-
-	// Compute a^d % n
-	long long x = modExp(a, d, n);
-
-	if (x == 1 || x == n - 1)
-		return true;
-
-	// Keep squaring x while one of the following doesn't
-	// happen
-	// (i)   d does not reach n-1
-	// (ii)  (x^2) % n is not 1
-	// (iii) (x^2) % n is not n-1
-	while (d != n - 1)
-	{
-		x = (x * x) % n;
-		d *= 2;
-
-		if (x == 1)      return false;
-		if (x == n - 1)    return true;
-	}
-
-	// Return composite
-	return false;
-}
-
-bool isPrime(long long n, long long k)
-{
-	// Corner cases
-	if (n <= 1 || n == 4)  return false;
-	if (n <= 3) return true;
-
-	// Find r such that n = 2^d * r + 1 for some r >= 1
-	long long d = n - 1;
-	while (d % 2 == 0)
-		d /= 2;
-
-	// Iterate given number of 'k' times
-	for (long long i = 0; i < k; i++)
-		if (!miillerTest(d, n))
-			return false;
-
-	return true;
-}
-
-std::array<long, 3> getExtendedGCD(int a, int n) {
-	long tempN = n;
-
-	long x1 = 1;
-	long x2 = 0;
-
-	long y1 = 0;
-	long y2 = 1;
-
-	while (n != 0) {
-		long qoutient = a / n;
-		long remainder = a % n;
-
-		a = n;
-		n = remainder;
-
-		long tempX = x1 - x2 * qoutient;
-		x1 = x2;
-		x2 = tempX;
-
-		long tempY = y1 - y2 * qoutient;
-		y1 = y2;
-		y2 = tempY;
-	}
-
-	return std::array<long, 3>{a, x1 < 0 ? x1 + tempN : x1, y1};
-}
-
-class Shamir {
-private:
-	long long P;
-	long long C;
-	long long D;
-
-public:
-	static long long generatePublicP() {
-		std::random_device dev;
-		std::mt19937_64 rng(dev());
-		std::uniform_int_distribution<std::mt19937_64::result_type> dist(0, INT_MAX - 4);
-
-		long P;
-		do {
-			P = dist(rng) + 2;
-		} while (!isPrime(P, 4)); // || !DiffieHellman.testFerma(P, 100)
-		return P;
-	}
-
-	Shamir(long P) {
+namespace encryption {
+	Shamir::Shamir(long long P) {
 		this->P = P;
 
 		std::random_device dev;
 		std::mt19937_64 rng(dev());
 		std::uniform_int_distribution<std::mt19937_64::result_type> dist(0, INT_MAX - 4);
-		std::array<long, 3> EuclidResult;
+		std::array<long long, 3> EuclidResult;
 		do {
 			do {
 				this->C = dist(rng) + 2;
-				EuclidResult = getExtendedGCD(C, P - 1);
+				EuclidResult = Euclid::getExtendedGCD(C, P - 1);
 			} while (EuclidResult[0] != 1);
 			this->D = EuclidResult[2] + (P - 1);
 		} while (C * D % (P - 1) != 1);
 	}
-};
+
+	long long Shamir::generatePublicP() {
+		std::random_device dev;
+		std::mt19937_64 rng(dev());
+		std::uniform_int_distribution<std::mt19937_64::result_type> dist(0, INT_MAX - 4);
+
+		long long P;
+		do {
+			P = dist(rng) + 2;
+		} while (!DiffieHellman::isPrime(P));
+		return P;
+	}
+
+	std::vector<long long> Shamir::ShamirCalcIteration(const std::string& path, std::vector<long long> prevX, int numOfIteration) {
+		switch (numOfIteration) {
+		case 1:
+		{
+			std::ifstream fileIn(path, std::ios::binary);
+			std::vector<char> byteArray = std::vector<char>(std::istreambuf_iterator<char>(fileIn), std::istreambuf_iterator<char>());
+
+			std::vector<long long> x1;
+
+			for (char a : byteArray) {
+				x1.push_back(FastMath::modExp(a, getC(), P));
+			}
+			return x1;
+		}
+		case 2:
+		{
+
+			std::vector<long long> x2;
+
+			for (long long a : prevX) {
+				x2.push_back(FastMath::modExp(a, getC(), P));
+			}
+			return x2;
+		}
+		case 3:
+		{
+			std::vector<long long> x3;
+
+			for (long long a : prevX) {
+				x3.push_back(FastMath::modExp(a, getD(), P));
+			}
+			return x3;
+		}
+		case 4:
+		{
+			std::vector<char> outFile(prevX.size());
+			for (int i = 0; i < prevX.size(); i++) {
+				outFile[i] = (char)FastMath::modExp(prevX[i], getD(), P);
+			}
+			std::ofstream fileOut(path, std::ios::binary);
+			fileOut.write((char*)&outFile[0], outFile.size() * sizeof(char));
+			return std::vector<long long>();
+		}
+		}
+		return std::vector<long long>();
+	}
+
+	void Shamir::encryptFile(const std::string& filename)
+	{
+		long long P = Shamir::generatePublicP();
+
+		Shamir A(P);
+		//FileManipulation.KeysToFile("Shamir", "A", A.getC(), A.getD());
+
+		Shamir B(P);
+		//FileManipulation.KeysToFile("Shamir", "B", B.getC(), B.getD());
+
+		std::vector<long long> x1 = A.ShamirCalcIteration(filename, std::vector<long long>(), 1);
+		std::vector<long long>  x2 = B.ShamirCalcIteration("", x1, 2);
+		std::vector<long long>  x3 = A.ShamirCalcIteration("", x2, 3);
+		std::vector<long long>  x4 = B.ShamirCalcIteration(filename + ".enc", x3, 4);
+	}
+
+	long long Shamir::getC() {
+		return C;
+	}
+
+	long long Shamir::getD() {
+		return C;
+	}
+}
