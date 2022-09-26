@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 #include "../lab6/Complex.h"
+#include <sstream>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -142,8 +143,6 @@ namespace lab6Tests
 			auto expectedValue = Complex(17, 30);
 			auto actualValue = firstValue * secondValue;
 
-			Logger::WriteMessage((firstValue * secondValue).toString().c_str());
-
 			Assert::IsTrue(expectedValue == actualValue);
 		}
 
@@ -162,7 +161,7 @@ namespace lab6Tests
 			auto firstValue = Complex(-64, 16);
 			auto secondValue = Complex(-2, 26);
 
-			auto expectedValue = Complex(0.8, -2.4);
+			auto expectedValue = Complex(0.8, 2.4);
 			auto actualValue = firstValue / secondValue;
 
 			Assert::IsTrue(expectedValue == actualValue);
@@ -205,10 +204,6 @@ namespace lab6Tests
 			auto expectedValue = Complex(-212992, 192512);
 			auto actualValue = testValue.pow(3);
 
-			//Logger::WriteMessage(expectedValue.toString().c_str());
-			//Logger::WriteMessage("\n");
-			//Logger::WriteMessage(actualValue.toString().c_str());
-
 			Assert::IsTrue(expectedValue == actualValue);
 		}
 
@@ -217,11 +212,115 @@ namespace lab6Tests
 			auto testValue = Complex(3840, 2048);
 
 			auto expectedValue = Complex(64, 16);
-			auto actualValue = testValue.root(2, 1);
+			auto actualValue = testValue.root(2, 0);
 
-			Logger::WriteMessage(expectedValue.toString().c_str());
-			Logger::WriteMessage("\n");
-			Logger::WriteMessage(actualValue.toString().c_str());
+			Assert::IsTrue(expectedValue == actualValue);
+		}
+
+		TEST_METHOD(TestAbs)
+		{
+			auto testValue = Complex(2, 2);
+
+			auto expectedValue = 2.82842712474619009l;
+			auto actualValue = testValue.abs();
+
+			Assert::IsTrue(expectedValue == actualValue);
+		}
+
+		TEST_METHOD(TestAngleRad_I)
+		{
+			auto testValue = Complex(2, 2);
+
+			auto expectedValue = 0.78539816339744828;
+			auto actualValue = testValue.angleRad();
+
+			Assert::IsTrue(expectedValue == actualValue);
+		}
+
+		TEST_METHOD(TestAngleRad_II)
+		{
+			auto testValue = Complex(-2, 2);
+
+			auto expectedValue = 2.356194490192345;
+			auto actualValue = testValue.angleRad();
+
+			Assert::IsTrue(expectedValue == actualValue);
+		}
+
+		TEST_METHOD(TestAngleRad_III)
+		{
+			auto testValue = Complex(-2, -2);
+
+			auto expectedValue = 3.9269908169872414;
+			auto actualValue = testValue.angleRad();
+
+			Assert::IsTrue(expectedValue == actualValue);
+		}
+
+		TEST_METHOD(TestAngleRad_IV)
+		{
+			auto testValue = Complex(2, -2);
+
+			auto expectedValue = -0.78539816339744828;
+			auto actualValue = testValue.angleRad();
+
+			Assert::IsTrue(expectedValue == actualValue);
+		}
+
+		TEST_METHOD(TestAngleRad_X_Y)
+		{
+			auto testValue = Complex(0, 2);
+
+			auto expectedValue = PI / 2;
+			auto actualValue = testValue.angleRad();
+
+			Assert::IsTrue(expectedValue == actualValue);
+
+			testValue = Complex(0, -2);
+
+			expectedValue = -PI / 2;
+			actualValue = testValue.angleRad();
+
+			Assert::IsTrue(expectedValue == actualValue);
+		}
+
+		TEST_METHOD(TestAngleDeg)
+		{
+			auto testValue = Complex(2, -2);
+
+			auto expectedValue = -45;
+			auto actualValue = testValue.angleDeg();
+
+			Assert::IsTrue(expectedValue == actualValue);
+		}
+
+		TEST_METHOD(TestGetReal)
+		{
+			auto testValue = Complex(2, -2);
+
+			auto expectedValue = 2.0l;
+			auto actualValue = testValue.real();
+
+			Assert::IsTrue(expectedValue == actualValue);
+		}
+		TEST_METHOD(TestGetImagine)
+		{
+			auto testValue = Complex(2, -2);
+
+			auto expectedValue = -2.0l;
+			auto actualValue = testValue.img();
+
+			Assert::IsTrue(expectedValue == actualValue);
+		}
+		TEST_METHOD(TestToString)
+		{
+			auto testValue = Complex(2, -2);
+
+			auto expectedValue = "2.000000+i*(-2.000000)";
+			
+			std::stringstream ss;
+			ss << testValue;
+			auto actualValue = ss.str();
 
 			Assert::IsTrue(expectedValue == actualValue);
 		}

@@ -52,7 +52,7 @@ public:
 	Complex operator/(const Complex& rhs) {
 		long double denominator = rhs._real * rhs._real + rhs._img * rhs._img;
 		long double nominatorLeft = _real * rhs._real + _img * rhs._img;
-		long double nominatorRight = rhs._real * _img + _real * rhs._img;
+		long double nominatorRight = rhs._real * _img - _real * rhs._img;
 
 		Complex complex(nominatorLeft / denominator, nominatorRight / denominator);
 		return complex;
@@ -66,16 +66,16 @@ public:
 		return _real != rhs._real || _img != rhs._img;
 	}
 
-	Complex pow(const Complex& complex_, long long n = 2)
+	Complex pow(long long n = 2)
 	{
-		long double result1 = std::atan2(complex_._img, complex_._real);
-		long double result2 = std::sqrtl(complex_._real * complex_._real + complex_._img * complex_._img);
+		long double phi = std::atan2(_img, _real);
+		long double r = std::sqrtl(_real * _real + _img * _img);
 
-		long double step = std::pow(result2, n);
-		long double answer = n * result1;
+		long double R = std::pow(r, n);
+		long double Phi = n * phi;
 
-		long double X = step * std::cos(answer);
-		long double Y = step * std::sin(answer);
+		long double X = std::roundl(R * std::cos(Phi));
+		long double Y = std::roundl(R * std::sin(Phi));
 
 		Complex complex(X, Y);
 		return complex;
@@ -90,7 +90,7 @@ public:
 			return std::atan(_img / _real);
 		}
 		else if (_real < 0) {
-			return std::atan(_img / _real) + PI / 2;
+			return std::atan(_img / _real) + PI;
 		}
 		else if (_real == 0 && _img > 0) {
 			return PI / 2;
@@ -98,19 +98,18 @@ public:
 		else if (_real == 0 && _img < 0) {
 			return -PI / 2;
 		}
+		else {
+			throw std::runtime_error("Can't calculate angle");
+		}
 	}
 
 	long double angleDeg() {
 		return angleRad() * 180 / PI;
 	}
 
-	Complex power(long long n) {
-		return Complex(_real * _real, 0) * Complex(std::cos(n * angleRad()), std::sin(n * angleRad()));
-	}
-
 	Complex root(long long n, long long i) {
 		std::vector<Complex> roots(n);
-		long double phiSqrt = std::pow(abs(), 1 / n);
+		long double phiSqrt = std::pow(abs(), 1 / static_cast<double>(n));
 		for (size_t k = 0;
 			k < roots.size();
 			k++)
@@ -143,6 +142,9 @@ public:
 		return realString() + "+i*" + img;
 	}
 
-	friend std::ostream& operator <<(std::ostream&, const Complex&);
+	friend std::ostream& operator<<(std::ostream& os, const Complex& complex) {
+		os << complex.toString();
+		return os;
+	}
 };
 
