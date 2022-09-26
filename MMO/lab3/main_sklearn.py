@@ -1,19 +1,15 @@
-import random
-import csv
 import numpy as np
 import sklearn as sk
 from sklearn.impute import SimpleImputer
-from sklearn.tree import DecisionTreeClassifier
-from itertools import product
 from sklearn.linear_model import LinearRegression
 from sklearn import model_selection
 from sklearn import preprocessing
-import matplotlib.pyplot as plt
 
 
 def testData(data):
     score = []
-    for _ in range(10):
+    iterations = 10
+    for _ in range(iterations):
         x = data[:, :-1]
         y = data[:, -1]
 
@@ -35,25 +31,36 @@ def testData(data):
 
         y_predicted = regressor.predict(x_test)
 
-        score.append(sk.metrics.mean_squared_error(y_test, y_predicted))
-        # print(sk.metrics.mean_squared_error(y_test, y_predicted))
-        # print(sk.metrics.r2_score(y_test, y_predicted))
+        matches = 0
+        for y_true, y_pred in zip(y_test, y_predicted):
+            matches += (y_pred - 1 <= y_true <= y_pred + 1)
+        matches /= len(y_test)
+
+        score.append(matches)
     avg_score = 0
     for s in score:
         avg_score += s
-    avg_score /= 10
+    avg_score /= iterations
 
     return avg_score
 
 
 def main():
     general_data = np.genfromtxt(
-        'winequalityN.csv', delimiter=',',
-        dtype=[str, float, float, float, float, float, float, float, float, float, float, float, float], skip_header=True)
+        'winequalityN.csv', delimiter=',', dtype='unicode', skip_header=True)
 
-    print(general_data[:1])
-    red_wine_data = [x for x in general_data if x[0] == "red"]
-    white_wine_data = [x for x in general_data if x[0] == "white"]
+    classes = {"white": 0, "red": 1}
+    for row in general_data:
+        row[0] = classes[row[0]]
+        for i, _ in enumerate(row):
+            if row[i] == '':
+                row[i] = np.NaN
+    general_data = general_data.astype(float)
+
+    red_wine_data = np.array(
+        [x for x in general_data if x[0] == classes["red"]])
+    white_wine_data = np.array(
+        [x for x in general_data if x[0] == classes["white"]])
 
     print(f'General: {testData(general_data)}')
     print(f'Red: {testData(red_wine_data)}')
