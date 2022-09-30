@@ -6,13 +6,14 @@
 using namespace crypto;
 
 namespace encryption {
-	Shamir::Shamir(long long P) {
+	Shamir::Shamir(unsigned long long P) {
 		this->P = P;
 
 		std::random_device dev;
 		std::mt19937_64 rng(dev());
 		std::uniform_int_distribution<std::mt19937_64::result_type> dist(0, INT_MAX - 4);
 		std::array<long long, 3> EuclidResult;
+
 		do {
 			do {
 				this->C = dist(rng) + 2;
@@ -22,12 +23,12 @@ namespace encryption {
 		} while (C * D % (P - 1) != 1);
 	}
 
-	long long Shamir::generatePublicP() {
+	unsigned long long Shamir::generatePublicP() {
 		std::random_device dev;
 		std::mt19937_64 rng(dev());
 		std::uniform_int_distribution<std::mt19937_64::result_type> dist(0, INT_MAX - 4);
 
-		long long P;
+		unsigned long long P;
 		do {
 			P = dist(rng) + 2;
 		} while (!DiffieHellman::isPrime(P));
@@ -39,6 +40,10 @@ namespace encryption {
 		case 1:
 		{
 			std::ifstream fileIn(path, std::ios::binary);
+			if (!fileIn.is_open()) {
+				throw std::runtime_error("Cannot open file: " + path);
+			}
+
 			std::vector<char> byteArray = std::vector<char>(std::istreambuf_iterator<char>(fileIn), std::istreambuf_iterator<char>());
 
 			std::vector<long long> x1;
@@ -104,4 +109,7 @@ namespace encryption {
 	long long Shamir::getD() {
 		return C;
 	}
+
+	long long ElGamal::P = 0;
+	long long ElGamal::G = 0;
 }

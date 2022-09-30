@@ -51,7 +51,7 @@ namespace crypto {
 		return -1;
 	}
 
-	long long DiffieHellman::generateKey() {
+	std::tuple<long long, long long, long long> DiffieHellman::generateKey() {
 		long long leftBound = 1;
 		long long rightBound = static_cast<long long>(1e9);
 
@@ -81,7 +81,7 @@ namespace crypto {
 		long long Zba = FastMath::modExp(Ya, Xb, P);
 
 		if (Zab == Zba) {
-			return Zab;
+			return std::make_tuple(P, g, Zab);
 		}
 
 		throw std::runtime_error("Keys are not equal");
@@ -112,7 +112,11 @@ namespace crypto {
 			y2 = tempY;
 		}
 
-		return std::array<long long, 3>{a, x1 < 0 ? x1 + tempN : x1, y1};
+		while (x1 < 0) {
+			x1 += tempN;
+		}
+
+		return std::array<long long, 3>{a, x1, y1};
 	}
 
 	std::vector<unsigned long long> BabyGiantStep::calculate(unsigned long long a, unsigned long long p, unsigned long long y) {
