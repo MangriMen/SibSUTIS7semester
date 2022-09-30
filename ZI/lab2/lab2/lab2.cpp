@@ -110,6 +110,6 @@ namespace encryption {
 		return C;
 	}
 
-	long long ElGamal::P = 0;
-	long long ElGamal::G = 0;
+	unsigned long long ElGamal::P = 0;
+	unsigned long long ElGamal::G = 0;
 }

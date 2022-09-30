@@ -35,7 +35,7 @@ public:
 	}
 
 	template <typename T>
-	static void writeFileAsBytes(std::string path, std::vector<T> data) {
+	static void writeBytesAsFile(std::string path, std::vector<T> data) {
 		std::ofstream file(path, std::ios::out | std::ios::binary);
 		if (!file.is_open()) {
 			throw std::runtime_error("Cannot open file: " + path);

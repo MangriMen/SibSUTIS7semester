@@ -28,20 +28,20 @@ namespace encryption {
 		long long getD();
 	};
 
-	static class ElGamal {
+	class ElGamal {
 	private:
-		static long long P;
-		static long long G;
+		static unsigned long long P;
+		static unsigned long long G;
 
-		long C;
-		long D;
+		unsigned long long C;
+		unsigned long long D;
 
-		long R;
+		unsigned long long R;
 
 	public:
 		static void generateParameters() {
-			auto [P, g, key] = crypto::DiffieHellman::generateKey();
-			setP(P);
+			auto [newP, g, key] = crypto::DiffieHellman::generateKey();
+			setP(newP);
 			setG(g);
 		}
 
@@ -55,80 +55,60 @@ namespace encryption {
 			this->R = 0;
 		}
 
-		std::vector<long long> elGamalSendMessage(long D, std::string path) {
-			std::random_device dev;
-			std::mt19937_64 rng(dev());
+		std::vector<unsigned long long> encryptMessage(const std::vector<char>& message, unsigned long long D) {
+			std::mt19937_64 rng((std::random_device())());
 			std::uniform_int_distribution<std::mt19937_64::result_type> dist(0, P - 3 - 1);
 
-			long k = dist(rng) + 1;;
-			std::ifstream fileIn(path, std::ios::binary);
-			if (!fileIn.is_open()) {
-				throw std::runtime_error("Cannot open file: " + path);
-			}
+			unsigned long long k = dist(rng) + 1;
+			unsigned long long partD = crypto::FastMath::modExp(D, k, P);
 
-			std::vector<char> byteArray = std::vector<char>(std::istreambuf_iterator<char>(fileIn), std::istreambuf_iterator<char>());
-			std::vector<long long> E;
-
-			long partD = crypto::FastMath::modExp(D, k, P);
-
-			for (char b : byteArray) {
-				E.push_back(crypto::FastMath::modExp((unsigned char)b * static_cast<unsigned long long>(partD), 1, P));
+			std::vector<unsigned long long> encryptedMessage(message.size());
+			for (size_t i = 0; i < encryptedMessage.size(); i++)
+			{
+				encryptedMessage[i] = crypto::FastMath::modExp((unsigned char)message[i] * static_cast<unsigned unsigned long long>(partD), 1, P);
 			}
 			R = crypto::FastMath::modExp(G, k, P);
-			return E;
+			return encryptedMessage;
 		}
 
-		void elGamalReceiveMessage(long R, std::vector<long long> E, std::string path) {
-			std::vector<char> outFile(E.size());
-			long partR = crypto::FastMath::modExp(R, P - 1 - C, P);
+		std::vector<char> decryptMessage(std::vector<unsigned long long> message, unsigned long long R) {
+			unsigned long long partR = crypto::FastMath::modExp(R, P - 1 - C, P);
 
-			for (int i = 0; i < E.size(); i++) {
-				outFile[i] = (char)crypto::FastMath::modExp(E[i] * partR, 1, P);
+			std::vector<char> decryptedMessage(message.size());
+			for (int i = 0; i < message.size(); i++) {
+				decryptedMessage[i] = (char)crypto::FastMath::modExp(message[i] * partR, 1, P);
 			}
-
-			std::ofstream fileOut(path, std::ios::binary);
-			fileOut.write((char*)&outFile[0], outFile.size() * sizeof(char));
+			return decryptedMessage;
 		}
 
-		long getC() {
+		std::vector<unsigned long long> encryptFile(std::string filename, unsigned long long D) {
+			auto data = Utils::readFileAsBytes(filename);
+			return encryptMessage(data, D);
+		}
+
+		std::vector<char> decryptFile(std::string filename, unsigned long long R) {
+			auto data = Utils::readFileAsBytes<unsigned long long>(filename);
+			return decryptMessage(data, D);
+		}
+
+		unsigned long long getC() {
 			return C;
 		}
 
-		long getD() {
+		unsigned long long getD() {
 			return D;
 		}
 
-		long getR() {
+		unsigned long long getR() {
 			return R;
 		}
 
-		static void setP(int p) {
+		static void setP(unsigned long long p) {
 			P = p;
 		}
 
-		static void setG(int g) {
+		static void setG(unsigned long long g) {
 			G = g;
-		}
-
-		static void ecnryptFile(const std::string& path) {
-			ElGamal::generateParameters();
-
-			ElGamal N;
-			//FileManipulation.KeysToFile("ElGamal", "N", N.getC(), N.getD());
-
-			ElGamal M;
-			//FileManipulation.KeysToFile("ElGamal", "M", M.getC(), M.getD());
-
-			std::vector<long long> E = N.elGamalSendMessage(M.getD(), path);
-
-			std::ofstream fileOut("gamal_enc_" + path, std::ios::out | std::ios::binary);
-			if (!fileOut.is_open()) {
-				throw std::runtime_error("Cannot open file");
-			}
-			fileOut.write((char*)&E[0], E.size() * sizeof(E[0]));
-			fileOut.close();
-
-			M.elGamalReceiveMessage(N.getR(), E, "gamal_dec_" + path);
 		}
 	};
 
@@ -137,36 +117,35 @@ namespace encryption {
 		std::vector<char> secretKey;
 
 	public:
-		std::vector<char> encryptFile(std::string path) {
-			std::ifstream fileIn(path, std::ios::binary);
-			if (!fileIn.is_open()) {
-				throw std::runtime_error("Cannot open file: " + path);
-			}
-
-			std::vector<char> byteArray = std::vector<char>(std::istreambuf_iterator<char>(fileIn), std::istreambuf_iterator<char>());
-
-			secretKey = std::vector<char>(byteArray.size());
-			std::vector<char> encryptMessage = std::vector<char>(byteArray.size());
-
-			std::random_device dev;
-			std::mt19937_64 rng(dev());
+		std::vector<char> encryptMessage(const std::vector<char>& message) {
+			std::mt19937_64 rng((std::random_device())());
 			std::uniform_int_distribution<std::mt19937_64::result_type> dist(0, 255);
 
-			for (int i = 0; i < byteArray.size(); i++) {
+			std::vector<char> encryptedMessage = std::vector<char>(message.size());
+			secretKey = std::vector<char>(message.size());
+			for (int i = 0; i < message.size(); i++) {
 				secretKey[i] = (char)dist(rng);
-				encryptMessage[i] = (char)(byteArray[i] ^ secretKey[i]);
+				encryptedMessage[i] = (char)(message[i] ^ secretKey[i]);
 			}
-			return encryptMessage;
+			return encryptedMessage;
 		}
-		void decryptFile(std::string path, std::vector<char> encryptMessage, std::vector<char> key) {
-			std::vector<char> decryptMessage = std::vector<char>(encryptMessage.size());
-			for (int i = 0; i < encryptMessage.size(); i++) {
-				decryptMessage[i] = (char)(encryptMessage[i] ^ key[i]);
-			}
 
-			std::ofstream fileOut(path, std::ios::binary);
-			fileOut.write((char*)&decryptMessage[0], decryptMessage.size() * sizeof(char));
-			fileOut.close();
+		std::vector<char> decryptMessage(const std::vector<char>& message, const std::vector<char>& key) {
+			std::vector<char> decryptedMessage = std::vector<char>(message.size());
+			for (int i = 0; i < message.size(); i++) {
+				decryptedMessage[i] = (char)(message[i] ^ key[i]);
+			}
+			return decryptedMessage;
+		}
+
+		std::vector<char> encryptFile(std::string file) {
+			std::vector<char> data = Utils::readFileAsBytes(file);
+			return encryptMessage(data);
+		}
+
+		std::vector<char> decryptFile(std::string file, const std::vector<char>& key) {
+			auto data = Utils::readFileAsBytes(file);
+			return decryptMessage(data, key);
 		}
 
 		std::vector<char> getSecretKey() {
@@ -183,9 +162,8 @@ namespace encryption {
 	public:
 		void RSA_Initialize()
 		{
-			std::random_device dev;
-			std::mt19937_64 rng(dev());
-			std::uniform_int_distribution<std::mt19937_64::result_type> dist(0, 1e9);
+			std::mt19937_64 rng((std::random_device())());
+			std::uniform_int_distribution<std::mt19937_64::result_type> dist(0, static_cast<unsigned long long>(1e9));
 
 			unsigned long long p;
 			unsigned long long q;
@@ -205,13 +183,11 @@ namespace encryption {
 			} while (crypto::Euclid::getExtendedGCD(e, eulerN)[0] != 1 || !crypto::DiffieHellman::isPrime(e));
 
 			d = crypto::Euclid::getExtendedGCD(e, eulerN)[1];
-
-			std::cout << "e: " << e << " d: " << d << " n:" << n << " eulerN: " << eulerN << "\n";
 		};
 
-		std::vector<unsigned long long> RSA_Encrypt(std::string filename)
+		std::vector<unsigned long long> RSA_Encrypt(std::string file)
 		{
-			auto data = Utils::readFileAsBytes(filename);
+			auto data = Utils::readFileAsBytes(file);
 			std::vector<unsigned long long> message(data.size());
 			for (size_t i = 0; i < message.size(); i++)
 			{
@@ -221,8 +197,9 @@ namespace encryption {
 			return message;
 		}
 
-		std::vector<char> RSA_Decrypt(std::vector<unsigned long long> data)
+		std::vector<char> RSA_Decrypt(std::string file)
 		{
+			auto data = Utils::readFileAsBytes<unsigned long long>(file);
 			std::vector<char> message(data.size());
 			for (size_t i = 0; i < message.size(); i++)
 			{

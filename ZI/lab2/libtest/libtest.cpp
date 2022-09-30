@@ -1,41 +1,63 @@
 #include <iostream>
 #include "../lab2/lab2.hpp"
 #include <fstream>
+#include <filesystem>
 
-void shamir() {
-	//encryption::Shamir::encryptFile("test.txt");
+namespace fs = std::filesystem;
+
+void shamir(const std::string& file) {
+	//encryption::Shamir::encryptFile(file);
 }
 
-void gamal() {
-	encryption::ElGamal::ecnryptFile("angel-mech.jpg");
+void gamal(const std::string& file) {
+	encryption::ElGamal::generateParameters();
+
+	encryption::ElGamal N;
+	encryption::ElGamal M;
+
+	Utils::writeBytesAsFile("output/gamal_key_N", std::vector<unsigned long long> { N.getC(), N.getD() });
+	Utils::writeBytesAsFile("output/gamal_key_M", std::vector<unsigned long long> { N.getC(), N.getD() });
+
+	std::vector<unsigned long long> encryptedMessage = N.encryptFile(file, M.getD());
+	Utils::writeBytesAsFile("output/gamal_enc_" + file, encryptedMessage);
+
+	auto decrypted_data = M.decryptFile("output/gamal_enc_" + file, N.getR());
+	Utils::writeBytesAsFile("output/gamal_dec_" + file, decrypted_data);
 }
 
-void vernam() {
+void vernam(const std::string& file) {
 	auto vernam = encryption::Vernam();
-	auto vernam_encrypted = vernam.encryptFile("angel-mech.jpg");
-	Utils::writeFileAsBytes("vernam_enc_angel-mech.jpg", vernam_encrypted);
-	vernam.decryptFile("vernam_dec_angel-mech.jpg", vernam_encrypted, vernam.getSecretKey());
+
+	auto encrypted = vernam.encryptFile(file);
+	Utils::writeBytesAsFile("output/vernam_enc_" + file, encrypted);
+	Utils::writeBytesAsFile("output/vernam_key", vernam.getSecretKey());
+
+	auto decrypted_data = vernam.decryptFile("output/vernam_enc_" + file, vernam.getSecretKey());
+	Utils::writeBytesAsFile("output/vernam_dec" + file, decrypted_data);
 }
 
-void rsa() {
+void rsa(const std::string& file) {
 	auto rsa = encryption::RSA();
 	rsa.RSA_Initialize();
 
-	auto filename = std::string("test.txt");
+	auto encrypted = rsa.RSA_Encrypt(file);
+	Utils::writeBytesAsFile("output/rsa_enc_" + file, encrypted);
 
-	auto encrypted = rsa.RSA_Encrypt(filename);
-	Utils::writeFileAsBytes("rsa/rsa_enc_" + filename, encrypted);
-
-	auto encrypted_data = Utils::readFileAsBytes<unsigned long long>("rsa/rsa_enc_" + filename);
-
-	auto decrypted = rsa.RSA_Decrypt(encrypted_data);
-	Utils::writeFileAsBytes("rsa/rsa_dec_" + filename, decrypted);
+	auto decrypted = rsa.RSA_Decrypt("output/rsa_enc_" + file);
+	Utils::writeBytesAsFile("output/rsa_dec_" + file, decrypted);
 }
 
 int main()
 {
-	shamir();
-	gamal();
-	vernam();
-	rsa();
+	std::string folder = "output";
+	if (!fs::is_directory(folder) || !fs::exists(folder)) {
+		fs::create_directory(folder);
+	}
+
+	std::string filename = "eng.txt";
+
+	shamir(filename);
+	gamal(filename);
+	vernam(filename);
+	rsa(filename);
 }
