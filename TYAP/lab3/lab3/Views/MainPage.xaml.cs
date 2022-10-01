@@ -11,8 +11,10 @@ using CommunityToolkit.WinUI.UI.Controls.Primitives;
 using CommunityToolkit.WinUI.UI.Controls.TextToolbarSymbols;
 using lab3.Models;
 using lab3.ViewModels;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Newtonsoft.Json.Linq;
 using Windows.UI;
@@ -25,10 +27,10 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
 
     private const string GRAMMAR_REGEXP = @"\[[^]]*]|\{[^}]*}|[^,]+";
 
-    private List<string> _rules = new();
-    private List<string> _alphabet = new();
+    private string[] _rules = new[] { "" };
+    private string[] _alphabet = new[] { "" };
     private string _start_rule = "";
-    private List<string> _end_rules = new();
+    private string[] _end_rules = new[] { "" };
 
     private string _current_rule = "";
 
@@ -37,15 +39,35 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         get; set;
     } = "";
 
-    public static Border CreateHeaderCell(string label)
+    public static StackPanel CreateStackPanelRowHeader(string[] cells)
+    {
+        var r = 4;
+        var fullRadius = new CornerRadius(r, r, r, r);
+        var leftRadius = new CornerRadius(r, 0, 0, r);
+        var rightRadius = new CornerRadius(0, r, r, 0);
+        var stackPanel = new StackPanel() { Orientation = Orientation.Horizontal };
+        if (cells.Length > 0)
+        {
+            var isMoreThanOneElement = cells.Length > 1;
+            stackPanel.Children.Add(CreateHeaderCell(cells[0], isMoreThanOneElement ? leftRadius : fullRadius));
+            for (var i = 1; i < cells.Length - 1; i++)
+            {
+                stackPanel.Children.Add(CreateHeaderCell(cells[i]));
+            }
+            stackPanel.Children.Add(CreateHeaderCell(cells[^1], rightRadius));
+        }
+        return stackPanel;
+    }
+
+    public static Border CreateHeaderCell(string label, CornerRadius? cornerRadius = null)
     {
         return new Border()
         {
-            BorderBrush = new SolidColorBrush(Color.FromArgb(110, 0, 0, 0)),
-            BorderThickness = new Thickness(2),
+            Background = new SolidColorBrush(Colors.Gray),
+            CornerRadius = cornerRadius ?? new CornerRadius(0),
             Padding = new Thickness(4),
             HorizontalAlignment = HorizontalAlignment.Center,
-            Width = 100,
+            Width = 80,
             Child = new TextBlock() { Text = label, HorizontalAlignment = HorizontalAlignment.Center }
         };
     }
@@ -54,7 +76,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
     {
         return new Border()
         {
-            Width = 100,
+            Width = 80,
             Child = frameworkElement
         };
     }
@@ -70,7 +92,18 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         }
     }
 
-    Dictionary<string, List<string>> _graph = new();
+    private string _ouput = "";
+    public string Output
+    {
+        get => _ouput;
+        set
+        {
+            _ouput = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Output)));
+        }
+    }
+
+    private readonly Dictionary<string, List<string>> _graph = new();
 
     public MainViewModel ViewModel
     {
@@ -83,12 +116,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         InitializeComponent();
     }
 
-    public static List<string> ParseGrammarSetPart(string field)
-    {
-        return Regex.Replace(field, @"{|}|\s+", "").Split(",").ToList();
-    }
-
-    private async void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+    private async void GrammarChanged(object sender, TextChangedEventArgs e)
     {
         async Task<bool> UserKeepsTyping()
         {
@@ -105,30 +133,48 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         try
         {
             var grm = (from Match m in Regex.Matches(_grammar.Replace(" ", ""), GRAMMAR_REGEXP) select m.Value).ToArray();
-            _rules = ParseGrammarSetPart(grm[0]).Distinct().ToList();
-            _alphabet = ParseGrammarSetPart(grm[1]).Distinct().ToList();
+            _rules = ParseGrammarSetPart(grm[0]).Distinct().ToArray();
+            _alphabet = ParseGrammarSetPart(grm[1]).Distinct().ToArray();
             _start_rule = grm[2];
-            _end_rules = ParseGrammarSetPart(grm[3]).Distinct().ToList();
+            _end_rules = ParseGrammarSetPart(grm[3]).Distinct().ToArray();
 
             var newItems = new List<ListViewItem>();
 
-            var header = new StackPanel() { Orientation = Orientation.Horizontal };
-            header.Children.Add(CreateHeaderCell("Правила"));
-            foreach (var symbol in _alphabet)
+            var headerLabels = new List<string>() { "Правила" };
+            headerLabels.AddRange(_alphabet);
+            newItems.Add(new ListViewItem()
             {
-                header.Children.Add(CreateHeaderCell(symbol));
-            }
-            newItems.Add(new ListViewItem() { Content = header });
+                Padding = new Thickness(0),
+                Content = CreateStackPanelRowHeader(headerLabels.ToArray())
+            });
 
             foreach (var rule in _rules)
             {
                 var row = new StackPanel() { Orientation = Orientation.Horizontal };
-                row.Children.Add(CreateRowCell(new TextBlock() { Text = rule, HorizontalAlignment = HorizontalAlignment.Center }));
-                for (var i = 0; i < _alphabet.Count; i++)
+                row.Children.Add(CreateRowCell(new TextBlock()
                 {
-                    row.Children.Add(CreateRowCell(new TextBox() { Text = "", HorizontalAlignment = HorizontalAlignment.Center }));
+                    Text = rule,
+                    TextAlignment = TextAlignment.Center,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                }));
+                for (var i = 0; i < _alphabet.Length; i++)
+                {
+                    var cellContent = new TextBox()
+                    {
+                        Text = "",
+                        TextAlignment = TextAlignment.Center,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    cellContent.TextChanging += SequenceChanging;
+                    row.Children.Add(CreateRowCell(cellContent));
                 }
-                newItems.Add(new ListViewItem() { Content = row });
+                newItems.Add(new ListViewItem()
+                {
+                    Padding = new Thickness(0),
+                    Content = row
+                });
             }
 
             grammarRules.ItemsSource = newItems;
@@ -139,63 +185,133 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         }
     }
 
-    public void CreateGraph()
+    private void ChainChanging(object sender, TextBoxTextChangingEventArgs e)
     {
-        _graph.Clear();
+        var textBox = (TextBox)sender;
 
-        var rowNumber = 1;
-        foreach (var row in grammarRules.Items)
+        if (m_ignoreNextTextChanged)
         {
-            if (rowNumber == 1)
-            {
-                rowNumber++;
-                continue;
-            }
+            m_ignoreNextTextChanged = false;
+            return;
+        }
 
-            var rowItemNumber = 1;
-            var stackPanelRow = (StackPanel)((ListViewItem)row).Content;
-            var rule = ((TextBlock)(((Border)stackPanelRow.Children[0]).Child)).Text;
-            _graph.Add(rule, new());
-            foreach (var item in stackPanelRow.Children)
-            {
-                var child = ((Border)item).Child;
-                if (rowItemNumber != 1)
-                {
-                    _graph[rule].Add(((TextBox)child).Text);
-                }
-                rowItemNumber++;
-            }
-            rowNumber++;
+        var alphabetRegex = @"[^";
+        foreach (var symbol in _alphabet)
+        {
+            alphabetRegex += symbol;
+        }
+        alphabetRegex += "]+";
+
+        var selectionStart = textBox.SelectionStart;
+        var prevTextLength = textBox.Text.Length;
+        textBox.Text = Regex.Replace(textBox.Text, alphabetRegex, "");
+        textBox.SelectionStart = selectionStart - (prevTextLength - textBox.Text.Length);
+    }
+
+    private bool m_ignoreNextTextChanged = false;
+    private void ChainKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == Windows.System.VirtualKey.Back
+            || e.Key == Windows.System.VirtualKey.Delete)
+        {
+            m_ignoreNextTextChanged = true;
         }
     }
 
-    private void Button_Click(object sender, RoutedEventArgs e)
+    public static List<string> ParseGrammarSetPart(string field)
+    {
+        return Regex.Replace(field, @"{|}|\s+", "").Split(",").ToList();
+    }
+
+    private void SequenceChanging(object sender, TextBoxTextChangingEventArgs e)
+    {
+        var textBox = (TextBox)sender;
+
+        if (!_rules.Contains(textBox.Text))
+        {
+            textBox.Text = "";
+        }
+    }
+
+    public void CreateGraph()
+    {
+        try
+        {
+            _graph.Clear();
+
+            var rowNumber = 1;
+            foreach (var row in grammarRules.Items)
+            {
+                if (rowNumber == 1)
+                {
+                    rowNumber++;
+                    continue;
+                }
+
+                var rowItemNumber = 1;
+                var stackPanelRow = (StackPanel)((ListViewItem)row).Content;
+                var rule = ((TextBlock)(((Border)stackPanelRow.Children[0]).Child)).Text;
+                _graph.Add(rule, new());
+                foreach (var item in stackPanelRow.Children)
+                {
+                    var child = ((Border)item).Child;
+                    if (rowItemNumber != 1)
+                    {
+                        var childText = ((TextBox)child).Text;
+                        if (childText == "")
+                        {
+                            throw new Exception($"Rule sequenc for rule {rule} not defined");
+                        }
+                        _graph[rule].Add(childText);
+                    }
+                    rowItemNumber++;
+                }
+                rowNumber++;
+            }
+        }
+        catch
+        {
+            _ = new ContentDialog()
+            {
+                Title = "Ошибка",
+                Content = new TextBlock() { Text = "Одно или несколько правил для состояний не заданы" },
+                CloseButtonText = "Закрыть",
+                XamlRoot = XamlRoot
+            }.ShowAsync();
+        }
+    }
+
+    private async void CheckClicked(object sender, RoutedEventArgs e)
     {
         CreateGraph();
 
-        int current_symbol = 0;
-
-
+        Output = "";
         _current_rule = _start_rule;
         foreach (var symbol in Chain)
         {
             var rule = _graph[_current_rule];
+            Output += $"{_current_rule} ";
             for (var i = 0; i < rule.Count; i++)
             {
                 if (symbol == _alphabet[i][0])
                 {
                     _current_rule = rule[i];
-                    Debug.WriteLine(rule[i][0]);
-                    if (_end_rules.Contains(_current_rule))
-                    {
-                        break;
-                    }
+                    Output += $"─{symbol}─> ";
                 }
-                //else
-                //{
-                //    throw new Exception("Symbol not in alphabet or correct rule not found");
-                //}
             }
+        }
+        Output += $"{_current_rule}";
+
+        if (!_end_rules.Contains(_current_rule))
+        {
+            Output += "!";
+            _ = new ContentDialog()
+            {
+                Title = "Ошибка",
+                Content = new TextBlock() { Text = "Цепочка не принадлежит ДКА" },
+                CloseButtonText = "Закрыть",
+                XamlRoot = XamlRoot
+            }.ShowAsync();
         }
     }
 }

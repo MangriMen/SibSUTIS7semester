@@ -14,22 +14,30 @@
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Spacing="8">
             <TextBlock Text="Грамматика" />
-            <TextBox Text="{x:Bind Grammar, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="TextBox_TextChanged" />
+            <TextBox Text="{x:Bind Grammar, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="GrammarChanged" />
         </StackPanel>
-        <Border
+        <ScrollViewer
             Grid.Row="1"
-            BorderThickness="4"
-            CornerRadius="4">
+            MinHeight="30"
+            MaxHeight="290">
             <ListView x:Name="grammarRules" SelectionMode="None" />
-        </Border>
+        </ScrollViewer>
         <StackPanel Grid.Row="2" Spacing="8">
             <TextBlock Text="Цепочка" />
-            <TextBox Text="{x:Bind Chain, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox
+                KeyDown="ChainKeyDown"
+                Text="{x:Bind Chain, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                TextChanging="ChainChanging" />
         </StackPanel>
-        <Button Grid.Row="3" Click="Button_Click">Проверить</Button>
+        <Button Grid.Row="3" Click="CheckClicked">Проверить</Button>
+        <StackPanel Grid.Row="4" Spacing="8">
+            <TextBlock Text="Результат" />
+            <TextBox IsReadOnly="True" Text="{x:Bind Output, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        </StackPanel>
     </Grid>
 </Page>
