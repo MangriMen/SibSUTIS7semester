@@ -46,7 +46,8 @@ namespace lab4
             }
             Rows = i;
             Cols = j;
-            _matrix = matrix;
+            _matrix = new int[i,j];
+            Array.Copy(matrix, _matrix, matrix.Length);
         }
 
         public int this[int i, int j]
@@ -137,7 +138,13 @@ namespace lab4
                     j < a.Cols;
                     j++)
                 {
-                    c[i, j] += a._matrix[i, j] * b._matrix[j, i];
+                    c[i, j] = 0;
+                    for (int k = 0;
+                        k < b.Cols;
+                        ++k)
+                    {
+                        c[i, j] += a[i, k] * b[k, j];
+                    }
                 }
             }
             return c;
@@ -179,7 +186,7 @@ namespace lab4
                 throw new MyException($"матрица не квадратная");
             }
 
-            Matrix c = new(_matrix, Rows, Cols);
+            Matrix c = new(Rows, Cols);
             for (int i = 0;
                 i < Rows;
                 i++)
@@ -188,7 +195,7 @@ namespace lab4
                     j < Cols;
                     j++)
                 {
-                    (c[i, j], c[j, i]) = (c[j, i], c[i, j]);
+                    c[i, j] = _matrix[j, i];
                 }
             }
             return c;
@@ -244,7 +251,7 @@ namespace lab4
 
         public override int GetHashCode()
         {
-            return GetHashCode();
+            return _matrix.GetHashCode();
         }
     }
 }
