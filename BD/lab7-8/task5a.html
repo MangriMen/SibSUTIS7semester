@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .group {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+      }
+      .group-el {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .group-el > * {
+        margin-bottom: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <form action="task5b.php">
+      <div
+        style="display: flex; flex-direction: column; justify-content: center"
+      >
+        <label style="margin-bottom: 1rem"
+          >Имя пользователя: <input type="text" name="username"
+        /></label>
+        <div class="group-el">
+          <label>
+            Ваше учебное заведение
+            <select name="question_1">
+              <option>СибГУТИ</option>
+              <option>НГТУ</option>
+              <option>НГУ</option>
+            </select>
+          </label>
+        </div>
+        <div class="group-el">
+          <label>
+            Максимальное значение int
+            <select name="question_2">
+              <option>2147483647</option>
+              <option>4294967295</option>
+              <option>2147483648</option>
+              <option>-2147483647</option>
+            </select>
+          </label>
+        </div>
+        <div class="group-el">
+          <label>
+            Результат данной команды "['b' + 'a' + +'a' +
+            'a'].join().toLowerCase();"
+            <select name="question_3">
+              <option>baaa</option>
+              <option>bannan</option>
+              <option>banana</option>
+              <option>baan</option>
+            </select>
+          </label>
+        </div>
+        <div class="group-el">
+          <label>
+            Сколько существует стандартов языка Си на момент 2022 года
+            <select name="question_4">
+              <option>7</option>
+              <option>4</option>
+              <option>9</option>
+              <option>11</option>
+            </select>
+          </label>
+        </div>
+        <div class="group-el">
+          <label>
+            Создатель языка Фортран
+            <select name="question_5">
+              <option>Джон Бэкус</option>
+              <option>Джек Бентус</option>
+              <option>Талибжон Бэкендов</option>
+              <option>Девид Бэсов</option>
+            </select>
+          </label>
+        </div>
+        <button type="submit">Ответить</button>
+      </div>
+    </form>
+  </body>
+</html>
