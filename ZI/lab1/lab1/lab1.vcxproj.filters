@@ -21,7 +21,7 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="lab1.h">
+    <ClInclude Include="lab1.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
