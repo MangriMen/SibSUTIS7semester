@@ -10,9 +10,9 @@ namespace lab4
 {
     public class MyException : Exception
     {
-        public MyException(string s) : base(s)
-        { }
+        public MyException(string s) : base(s) { }
     }
+
     public class Matrix
     {
         private readonly int[,] _matrix;
@@ -46,7 +46,8 @@ namespace lab4
             }
             Rows = i;
             Cols = j;
-            _matrix = matrix;
+            _matrix = new int[i,j];
+            Array.Copy(matrix, _matrix, matrix.Length);
         }
 
         public int this[int i, int j]
@@ -85,9 +86,13 @@ namespace lab4
             }
 
             Matrix c = new(a.Rows, a.Cols);
-            for (int i = 0; i < a.Rows; i++)
+            for (int i = 0;
+                i < a.Rows;
+                i++)
             {
-                for (int j = 0; j < a.Cols; j++)
+                for (int j = 0;
+                    j < a.Cols;
+                    j++)
                 {
                     c[i, j] = a._matrix[i, j] + b._matrix[i, j];
                 }
@@ -103,9 +108,13 @@ namespace lab4
             }
 
             Matrix c = new(a.Rows, a.Cols);
-            for (int i = 0; i < a.Rows; i++)
+            for (int i = 0;
+                i < a.Rows;
+                i++)
             {
-                for (int j = 0; j < a.Cols; j++)
+                for (int j = 0;
+                    j < a.Cols;
+                    j++)
                 {
                     c[i, j] = a._matrix[i, j] - b._matrix[i, j];
                 }
@@ -121,11 +130,21 @@ namespace lab4
             }
 
             Matrix c = new(a.Rows, a.Cols);
-            for (int i = 0; i < a.Rows; i++)
+            for (int i = 0;
+                i < a.Rows;
+                i++)
             {
-                for (int j = 0; j < a.Cols; j++)
+                for (int j = 0;
+                    j < a.Cols;
+                    j++)
                 {
-                    c[i, j] += a._matrix[i, j] * b._matrix[j, i];
+                    c[i, j] = 0;
+                    for (int k = 0;
+                        k < b.Cols;
+                        ++k)
+                    {
+                        c[i, j] += a[i, k] * b[k, j];
+                    }
                 }
             }
             return c;
@@ -139,8 +158,12 @@ namespace lab4
             }
 
             bool q = true;
-            for (int i = 0; i < a.Rows; i++)
-                for (int j = 0; j < a.Cols; j++)
+            for (int i = 0;
+                i < a.Rows;
+                i++)
+                for (int j = 0;
+                    j < a.Cols;
+                    j++)
                 {
                     if (a[i, j] != b[i, j])
                     {
@@ -153,7 +176,6 @@ namespace lab4
 
         public static bool operator !=(Matrix a, Matrix b)
         {
-
             return !(a == b);
         }
 
@@ -164,12 +186,16 @@ namespace lab4
                 throw new MyException($"матрица не квадратная");
             }
 
-            Matrix c = new(_matrix, Rows, Cols);
-            for (int i = 0; i < Rows; i++)
+            Matrix c = new(Rows, Cols);
+            for (int i = 0;
+                i < Rows;
+                i++)
             {
-                for (int j = 0; j < Cols; j++)
+                for (int j = 0;
+                    j < Cols;
+                    j++)
                 {
-                    (c[i, j], c[j, i]) = (c[j, i], c[i, j]);
+                    c[i, j] = _matrix[j, i];
                 }
             }
             return c;
@@ -179,9 +205,13 @@ namespace lab4
         {
             int minElement = int.MaxValue;
 
-            for (int i = 0; i < Rows; i++)
+            for (int i = 0;
+                i < Rows;
+                i++)
             {
-                for (int j = 0; j < Cols; j++)
+                for (int j = 0;
+                    j < Cols;
+                    j++)
                 {
                     if (minElement > _matrix[i, j])
                     {
@@ -199,11 +229,14 @@ namespace lab4
 
         public void Show()
         {
-            for (int i = 0; i < Rows; i++)
+            for (int i = 0;
+                i < Rows;
+                i++)
             {
-                for (int j = 0; j < Cols; j++)
+                for (int j = 0;
+                    j < Cols;
+                    j++)
                 {
-
                     Console.Write("\t" + this[i, j]);
                 }
                 Console.WriteLine();
@@ -218,8 +251,7 @@ namespace lab4
 
         public override int GetHashCode()
         {
-            return GetHashCode();
+            return _matrix.GetHashCode();
         }
     }
-
 }
