@@ -58,7 +58,8 @@ def classifyPWRWS(trainData, testData, k, numberOfClasses):
             distant[0]/dist(testPoint, trainData[k+1][:-1])), distant[1]) for distant in distances[:k]])
 
         stat = np.array([0 for _ in range(numberOfClasses)])
-        filtered_test_dist = np.array(test_distances[test_distances[0] >= 0.5])
+        filtered_test_dist = np.array(
+            [x for x in test_distances if x[0] >= 0.5])
 
         for d in filtered_test_dist:
             stat[int(d[1])] += 1
