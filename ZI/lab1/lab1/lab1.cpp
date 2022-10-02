@@ -115,20 +115,20 @@ namespace crypto {
 		return std::array<long long, 3>{a, x1 < 0 ? x1 + tempN : x1, y1};
 	}
 
-	std::vector<unsigned long long> BabyGiantStep::calculate(unsigned long long a, unsigned long long p, unsigned long long y) {
-		auto n = static_cast<unsigned long long>(ceil(sqrt(y - 1)));
+	std::vector<unsigned long long> BabyGiantStep::calculate(unsigned long long a, unsigned long long y, unsigned long long p) {
+		auto n = static_cast<unsigned long long>(ceil(sqrt(p - 1)));
 
 		std::vector<unsigned long long> results;
 
 		std::map<unsigned long long, std::vector<unsigned long long>> row;
 		for (unsigned long long i = 0; i < n; i++) {
-			row[FastMath::modExp(a, i, y)].push_back(i);
+			row[FastMath::modExp(a, i, p)].push_back(i);
 		}
 
-		unsigned long long c = FastMath::modExp(a, n * (y - 2), y);
+		unsigned long long c = FastMath::modExp(a, n * (p - 2), p);
 
 		for (unsigned long long i = 0; i < n; i++) {
-			unsigned long long temp = (p * FastMath::modExp(c, i, y)) % y;
+			unsigned long long temp = (y * FastMath::modExp(c, i, p)) % p;
 			if (row.count(temp))
 			{
 				for (const auto& j : row.at(temp)) {
