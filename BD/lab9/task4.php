@@ -1,6 +1,9 @@
 <?php
 require('db_connect.php');
 
+$email_regex = "/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}/";
+$date_regex = "/[0-9]{4}-[0-9]{2}-[0-9]{2}/";
+
 $result = $conn->query('SELECT * FROM notebook_br1');
 
 $id = array_key_exists('id', $_GET) ? $_GET['id'] : -1;
@@ -11,6 +14,14 @@ if (!empty($_GET)) {
     // }
 
     if (array_key_exists("field_name", $_GET)) {
+        if ($_GET['field_name'] == 'mail' && !preg_match($email_regex, $_GET['field_value'])) {
+            die("Email entered incorrectly\n&nbsp&nbsp<a href=task4.php>Go back</a>");
+        }
+
+        if ($_GET['field_name'] == 'birthday' && !preg_match($date_regex, $_GET['field_value'])) {
+            die("Birthday entered incorrectly\n&nbsp&nbsp<a href=task4.php>Go back</a>");
+        }
+
         $res = $conn->query('UPDATE notebook_br1 SET ' . $_GET['field_name'] . '=' . '\'' . $_GET['field_value'] . '\'' . ' WHERE id = ' . $id . ';');
 
         echo $conn->error;
