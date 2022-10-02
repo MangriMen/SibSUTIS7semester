@@ -1,0 +1,94 @@
+﻿<Page
+    x:Class="lab1.Views.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid
+        x:Name="ContentArea"
+        Margin="0,0,0,45"
+        RowSpacing="32">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions />
+
+        <Grid
+            Grid.Row="0"
+            ColumnSpacing="16"
+            RowSpacing="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+            </Grid.RowDefinitions>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock
+                Grid.Row="0"
+                Grid.Column="0"
+                Text="Входные данные" />
+            <ScrollViewer Grid.Row="1" Grid.Column="0">
+                <TextBox
+                    x:Name="ManualInput"
+                    MaxHeight="200"
+                    AcceptsReturn="True"
+                    PlaceholderText="Введите грамматику"
+                    Text="{x:Bind RawGrammar}"
+                    TextChanged="ManualInput_TextChanged"
+                    TextWrapping="Wrap" />
+            </ScrollViewer>
+            <StackPanel
+                Grid.Row="2"
+                Grid.Column="0"
+                HorizontalAlignment="Left"
+                Orientation="Vertical"
+                Spacing="8">
+                <TextBlock VerticalAlignment="Center" Text="Длина цепочки" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <NumberBox
+                        Header="От"
+                        LargeChange="10"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Compact"
+                        Value="{x:Bind SequenceLengthMin, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <NumberBox
+                        Header="До"
+                        LargeChange="10"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Compact"
+                        Text="{x:Bind SequenceLengthMax, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+            </StackPanel>
+            <Button
+                Grid.Row="3"
+                Grid.Column="0"
+                Click="StartClick">
+                Начать
+            </Button>
+        </Grid>
+        <Grid Grid.Row="1" RowSpacing="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Text="Цепочки" />
+            <ScrollViewer Grid.Row="1">
+                <TextBox
+                    AcceptsReturn="True"
+                    IsReadOnly="True"
+                    Text="{x:Bind Chains, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    TextWrapping="Wrap" />
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Page>
