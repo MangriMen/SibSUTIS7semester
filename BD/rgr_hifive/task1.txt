@@ -1,0 +1,29 @@
+1) создания таблицы,
+CREATE TABLE T2 (
+    NUM INT AUTO_INCREMENT PRIMARY KEY,
+    OS_NAME CHAR(32),
+    OS_TYPE CHAR(32),
+    MANUFACTURER CHAR(32)
+);
+
+2) начального заполнения таблицы данными,
+INSERT INTO T2 (NUM, OS_NAME, OS_TYPE, MANUFACTURER)
+VALUES
+    (1, "Win95", "Win", "Microsoft"),
+    (2, "Win98", "Win", "Microsoft"),
+    (3, "WinNT", "Win", "UnixF"),
+    (4, "WinXP", "Win", "Apple"),
+    (5, "Unix", "Unix", "UnixF"),
+    (6, "FreeBSD", "Unix", "Jobbs"),
+    (7, "Linux", "Unix", "UnixF"),
+    (8, "MacOS1", "Mac", "Apple"),
+    (9, "MacOS2", "Mac", "Apple"),
+    (10, "MacOS3", "Mac", "Jobbs");
+
+3) выборки из нее итоговой информации и информации по заданным запросам
+    #1 Вывести число строк, содержащих данные о ОС, тип которых задавать в запросе.
+    SELECT COUNT(*) FROM T2 WHERE OS_TYPE = "Win";
+    #3 Вывести названия ОС, имеющих те же типы, что и типы ОС, выпускаемые фирмой, указанной в запросе.
+    SELECT * FROM T2 WHERE OS_TYPE != (SELECT OS_TYPE FROM T2 ORDER BY OS_TYPE DESC LIMIT 1);
+    #2 Вывести список OC, кроме тех, что относятся к последнему по алфавиту типу.
+    SELECT OS_NAME FROM T2 WHERE OS_TYPE IN (SELECT OS_TYPE FROM T2 WHERE MANUFACTURER = "Apple");
