@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .group {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+      }
+      .group-el {
+        display: flex;
+        flex-direction: column;
+      }
+    </style>
+  </head>
+  <body>
+    <form action="task4b.php">
+      <div
+        style="
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          width: 10rem;
+        "
+      >
+        <div class="group">
+          <div class="group-el">
+            <span>Align</span>
+            <label
+              ><input
+                name="align"
+                type="radio"
+                value="left"
+                checked
+              />left</label
+            >
+            <label
+              ><input name="align" type="radio" value="center" />center</label
+            >
+            <label
+              ><input name="align" type="radio" value="right" />right</label
+            >
+          </div>
+
+          <div class="group-el">
+            <span>Valign</span>
+            <label
+              ><input name="valign" type="checkbox" value="top" />top</label
+            >
+            <label
+              ><input
+                name="valign"
+                type="checkbox"
+                value="middle"
+              />middle</label
+            >
+            <label
+              ><input
+                name="valign"
+                type="checkbox"
+                value="bottom"
+              />bottom</label
+            >
+          </div>
+        </div>
+
+        <button type="submit">Выполнить</button>
+      </div>
+    </form>
+  </body>
+</html>
