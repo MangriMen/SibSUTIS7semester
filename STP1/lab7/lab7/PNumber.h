@@ -1,6 +1,22 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include <vector>
+
+std::vector<std::string> split(std::string s, std::string delimiter) {
+	size_t pos_start = 0, pos_end, delim_len = delimiter.length();
+	std::string token;
+	std::vector<std::string> res;
+
+	while ((pos_end = s.find(delimiter, pos_start)) != std::string::npos) {
+		token = s.substr(pos_start, pos_end - pos_start);
+		pos_start = pos_end + delim_len;
+		res.push_back(token);
+	}
+
+	res.push_back(s.substr(pos_start));
+	return res;
+}
 
 class PNumber
 {
@@ -19,10 +35,11 @@ public:
 		accuracy = c_;
 	}
 
-	PNumber(const std::string& a_, const std::string& b_, const std::string& c_) {
-		long double aParsed = std::stold(a_);
-		int bParsed = std::stoi(b_);
-		int cParsed = std::stoi(c_);
+	PNumber(const std::string& str) {
+		auto parsed = split(str, " ");
+		long double aParsed = std::stold(parsed[0]);
+		int bParsed = std::stoi(parsed[1]);
+		int cParsed = std::stoi(parsed[2]);
 
 		if (bParsed < 2 || bParsed > 16) {
 			throw std::invalid_argument("Base must be in range [2..16]");
@@ -84,7 +101,7 @@ public:
 	}
 
 	std::string getNumStr() const {
-		return std::to_string(num) + " b: " + std::to_string(base) + "acc: " + std::to_string(accuracy);
+		return std::to_string(num) + " " + std::to_string(base) + " " + std::to_string(accuracy);
 	}
 
 	int getBase() const {
