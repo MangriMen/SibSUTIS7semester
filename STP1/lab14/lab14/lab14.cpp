@@ -8,9 +8,7 @@ using namespace std;
 
 int main()
 {
-    auto a = Poly(2, 4);
-
-    cout << a.degree();
+	auto a = Poly(2, 4);
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

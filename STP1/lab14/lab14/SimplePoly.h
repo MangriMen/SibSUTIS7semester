@@ -14,7 +14,7 @@ public:
 		}
 	}
 
-	long long getDegree() {
+	long long getDegree() const {
 		return _degree;
 	}
 
@@ -22,7 +22,7 @@ public:
 		_degree = degree;
 	}
 
-	long long getCoeff() {
+	long long getCoeff() const {
 		return _coeff;
 	}
 
@@ -30,20 +30,32 @@ public:
 		_coeff = coeff;
 	}
 
-	bool operator ==(const SimplePoly& rhs) {
+	bool operator==(const SimplePoly& rhs) const {
 		return _coeff == rhs._coeff && _degree == rhs._degree;
+	}
+
+	bool operator!=(const SimplePoly& rhs) const {
+		return _coeff != rhs._coeff || _degree != rhs._degree;
 	}
 
 	SimplePoly diff() {
 		return SimplePoly(_coeff * (_degree), _degree - 1);
 	}
 
-	long long calc(long long x) {
-		return (_coeff * std::pow(x, _degree));
+	long long calc(long long x) const {
+		return (_coeff * static_cast<long long>(std::pow(x, _degree)));
 	}
 
 	std::string ToString(const std::string& x = "x") {
 		return std::to_string(_coeff) + x + "^" + std::to_string(_degree);
+	}
+
+	bool operator>(const SimplePoly& rhs) {
+		return calc(1) > rhs.calc(1);
+	}
+
+	bool operator<(const SimplePoly& rhs) {
+		return calc(1) < rhs.calc(1);
 	}
 };
 
