@@ -21,4 +21,4 @@ VALUES
 3. Выборка данных
     3.1 SELECT * FROM T1 WHERE Название IN ('Access', 'Orion4');
     3.2 SELECT COUNT(Тип) FROM T1 WHERE Фирма != "Orion";
-    3.3 SELECT Фирма FROM T1 WHERE Тип LIKE '%о%';
+    3.3 SELECT Фирма FROM T1 WHERE Тип IN (SELECT Тип FROM T1 WHERE Название LIKE '%o%');
