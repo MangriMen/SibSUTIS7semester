@@ -11,6 +11,7 @@ void shamir(const std::string& file) {
 	encryption::Shamir A(P);
 	encryption::Shamir B(P);
 
+	Utils::writeBytesAsFile("output/shamir_key_P", std::vector<unsigned long long> { P });
 	Utils::writeBytesAsFile("output/shamir_key_A", std::vector<unsigned long long> { A.getC(), A.getD() });
 	Utils::writeBytesAsFile("output/shamir_key_B", std::vector<unsigned long long> { B.getC(), B.getD() });
 
@@ -35,14 +36,15 @@ void gamal(const std::string& file) {
 	encryption::ElGamal A;
 	encryption::ElGamal B;
 
+	Utils::writeBytesAsFile("output/gamal_key_P", std::vector<unsigned long long> { encryption::ElGamal::getP(), encryption::ElGamal::getG() });
 	Utils::writeBytesAsFile("output/gamal_key_A", std::vector<unsigned long long> { A.getC(), A.getD() });
 	Utils::writeBytesAsFile("output/gamal_key_B", std::vector<unsigned long long> { B.getC(), B.getD() });
 
-	std::vector<unsigned long long> encryptedMessage = A.encryptFile(file, B.getD());
-	Utils::writeBytesAsFile("output/gamal_enc_" + file, encryptedMessage);
+	std::vector<unsigned long long> encrypted = A.encryptFile(file, B.getD());
+	Utils::writeBytesAsFile("output/gamal_enc_" + file, encrypted);
 
-	auto decrypted_data = B.decryptFile("output/gamal_enc_" + file, A.getR());
-	Utils::writeBytesAsFile("output/gamal_dec_" + file, decrypted_data);
+	auto decrypted = B.decryptFile("output/gamal_enc_" + file, A.getR());
+	Utils::writeBytesAsFile("output/gamal_dec_" + file, decrypted);
 }
 
 void vernam(const std::string& file) {
@@ -53,18 +55,20 @@ void vernam(const std::string& file) {
 
 	Utils::writeBytesAsFile("output/vernam_key", vernam.getSecretKey());
 
-	auto decrypted_data = vernam.decryptFile("output/vernam_enc_" + file, vernam.getSecretKey());
-	Utils::writeBytesAsFile("output/vernam_dec_" + file, decrypted_data);
+	auto decrypted = vernam.decryptFile("output/vernam_enc_" + file, vernam.getSecretKey());
+	Utils::writeBytesAsFile("output/vernam_dec_" + file, decrypted);
 }
 
 void rsa(const std::string& file) {
 	auto rsa = encryption::RSA();
-	rsa.RSA_Initialize();
 
-	auto encrypted = rsa.RSA_Encrypt(file);
+	auto encrypted = rsa.encryptFile(file);
 	Utils::writeBytesAsFile("output/rsa_enc_" + file, encrypted);
 
-	auto decrypted = rsa.RSA_Decrypt("output/rsa_enc_" + file);
+	Utils::writeBytesAsFile("outpyt/rsa_key_public", rsa.getPublicKey());
+	Utils::writeBytesAsFile("outpyt/rsa_key_private", std::vector<unsigned long long> { rsa.getPrivateKey()});
+
+	auto decrypted = rsa.decryptFile("output/rsa_enc_" + file);
 	Utils::writeBytesAsFile("output/rsa_dec_" + file, decrypted);
 }
 
