@@ -12,7 +12,7 @@ namespace crypto {
 	public:
 		static bool isPrime(long long p);
 		static long long generator(long long p);
-		static long long generateKey();
+		static std::tuple<long long, long long, long long> generateKey();
 	};
 
 	class Euclid {

@@ -51,7 +51,7 @@ namespace crypto {
 		return -1;
 	}
 
-	long long DiffieHellman::generateKey() {
+	std::tuple<long long, long long, long long> DiffieHellman::generateKey() {
 		long long leftBound = 1;
 		long long rightBound = static_cast<long long>(1e9);
 
@@ -81,54 +81,54 @@ namespace crypto {
 		long long Zba = FastMath::modExp(Ya, Xb, P);
 
 		if (Zab == Zba) {
-			return Zab;
+			return std::make_tuple(P, g, Zab);
 		}
 
 		throw std::runtime_error("Keys are not equal");
 	}
 
-	std::array<long long, 3> Euclid::getExtendedGCD(long long a, long long n) {
-		long long tempN = n;
-
-		long long x1 = 1;
-		long long x2 = 0;
-
-		long long y1 = 0;
-		long long y2 = 1;
-
-		while (n != 0) {
-			long long qoutient = a / n;
-			long long remainder = a % n;
-
-			a = n;
-			n = remainder;
-
-			long long tempX = x1 - x2 * qoutient;
-			x1 = x2;
-			x2 = tempX;
-
-			long long tempY = y1 - y2 * qoutient;
-			y1 = y2;
-			y2 = tempY;
+	std::array<long long, 3> Euclid::getExtendedGCD(long long a, long long b) {
+		bool isSwap = false;
+		if (a < b) {
+			std::swap(a, b);
+			isSwap = true;
 		}
 
-		return std::array<long long, 3>{a, x1 < 0 ? x1 + tempN : x1, y1};
+		std::array<long long, 3> U{ a, 1, 0 };
+		std::array<long long, 3> V{ b, 0, 1 };
+
+		while (V[0] != 0) {
+			long long q = U[0] / V[0];
+			std::array<long long, 3> T{ U[0] % V[0], U[1] - q * V[1], U[2] - q * V[2] };
+			U = V;
+			V = T;
+		}
+
+		if (isSwap) {
+			std::swap(U[1], U[2]);
+		}
+
+		while (U[1] < 0) {
+			U[1] += isSwap ? a : b;
+		}
+
+		return U;
 	}
 
-	std::vector<unsigned long long> BabyGiantStep::calculate(unsigned long long a, unsigned long long p, unsigned long long y) {
-		auto n = static_cast<unsigned long long>(ceil(sqrt(y - 1)));
+	std::vector<unsigned long long> BabyGiantStep::calculate(unsigned long long a, unsigned long long y, unsigned long long p) {
+		auto n = static_cast<unsigned long long>(ceil(sqrt(p - 1)));
 
 		std::vector<unsigned long long> results;
 
 		std::map<unsigned long long, std::vector<unsigned long long>> row;
 		for (unsigned long long i = 0; i < n; i++) {
-			row[FastMath::modExp(a, i, y)].push_back(i);
+			row[FastMath::modExp(a, i, p)].push_back(i);
 		}
 
-		unsigned long long c = FastMath::modExp(a, n * (y - 2), y);
+		unsigned long long c = FastMath::modExp(a, n * (p - 2), p);
 
 		for (unsigned long long i = 0; i < n; i++) {
-			unsigned long long temp = (p * FastMath::modExp(c, i, y)) % y;
+			unsigned long long temp = (y * FastMath::modExp(c, i, p)) % p;
 			if (row.count(temp))
 			{
 				for (const auto& j : row.at(temp)) {
