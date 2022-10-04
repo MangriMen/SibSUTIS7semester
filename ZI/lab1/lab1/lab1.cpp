@@ -87,36 +87,32 @@ namespace crypto {
 		throw std::runtime_error("Keys are not equal");
 	}
 
-	std::array<long long, 3> Euclid::getExtendedGCD(long long a, long long n) {
-		long long tempN = n;
-
-		long long x1 = 1;
-		long long x2 = 0;
-
-		long long y1 = 0;
-		long long y2 = 1;
-
-		while (n != 0) {
-			long long qoutient = a / n;
-			long long remainder = a % n;
-
-			a = n;
-			n = remainder;
-
-			long long tempX = x1 - x2 * qoutient;
-			x1 = x2;
-			x2 = tempX;
-
-			long long tempY = y1 - y2 * qoutient;
-			y1 = y2;
-			y2 = tempY;
+	std::array<long long, 3> Euclid::getExtendedGCD(long long a, long long b) {
+		bool isSwap = false;
+		if (a < b) {
+			std::swap(a, b);
+			isSwap = true;
 		}
 
-		while (x1 < 0) {
-			x1 += tempN;
+		std::array<long long, 3> U{ a, 1, 0 };
+		std::array<long long, 3> V{ b, 0, 1 };
+
+		while (V[0] != 0) {
+			long long q = U[0] / V[0];
+			std::array<long long, 3> T{ U[0] % V[0], U[1] - q * V[1], U[2] - q * V[2] };
+			U = V;
+			V = T;
 		}
 
-		return std::array<long long, 3>{a, x1, y1};
+		if (isSwap) {
+			std::swap(U[1], U[2]);
+		}
+
+		while (U[1] < 0) {
+			U[1] += isSwap ? a : b;
+		}
+
+		return U;
 	}
 
 	std::vector<unsigned long long> BabyGiantStep::calculate(unsigned long long a, unsigned long long y, unsigned long long p) {

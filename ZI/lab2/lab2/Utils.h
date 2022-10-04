@@ -28,7 +28,9 @@ public:
 		file.seekg(0, std::ios_base::beg);
 
 		std::vector<T> data(length / sizeof(T));
-		file.read((char*)&data[0], data.size() * sizeof(T));
+		if (data.size() > 0) {
+			file.read((char*)&data[0], data.size() * sizeof(T));
+		}
 		file.close();
 
 		return data;
@@ -40,7 +42,9 @@ public:
 		if (!file.is_open()) {
 			throw std::runtime_error("Cannot open file: " + path);
 		}
-		file.write((char*)&data[0], data.size() * sizeof(data[0]));
+		if (data.size() > 0) {
+			file.write((char*)&data[0], data.size() * sizeof(T));
+		}
 		file.close();
 	}
 };
