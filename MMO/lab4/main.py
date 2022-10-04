@@ -22,8 +22,8 @@ num_classes = len(classes)
                                                          oov_char=oov_char, index_from=index_from, num_words=num_words)
 
 tokenizer = Tokenizer(num_words=num_words)
-x_train = tokenizer.sequences_to_matrix(x_train, mode='binary')
-x_test = tokenizer.sequences_to_matrix(x_test, mode='binary')
+x_train = tokenizer.sequences_to_matrix(x_train, mode='count')
+x_test = tokenizer.sequences_to_matrix(x_test, mode='count')
 
 y_train = to_categorical(y_train, num_classes=num_classes)
 y_test = to_categorical(y_test, num_classes=num_classes)

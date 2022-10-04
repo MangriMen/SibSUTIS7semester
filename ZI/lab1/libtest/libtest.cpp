@@ -22,34 +22,30 @@ int main() {
 	auto generateDiffieHellmanKey_result = DiffieHellman::generateKey();
 	cout << "Diffie Hellman: " << generateDiffieHellmanKey_result << "\n";
 
+	auto a = dist(rng);
+	auto p = dist(rng);
 
-	while (true) {
-		auto a = dist(rng);
-		auto p = dist(rng);
+	while (Euclid::getExtendedGCD(a, p)[0] != 1 || !DiffieHellman::isPrime(a) || !DiffieHellman::isPrime(p)) {
+		a = dist(rng);
+		p = dist(rng);
+	}
 
-		while (Euclid::getExtendedGCD(a, p)[0] != 1 || !DiffieHellman::isPrime(a) || !DiffieHellman::isPrime(p)) {
-			a = dist(rng);
-			p = dist(rng);
+	auto x = dist(rng);
+	auto y = FastMath::modExp(a, x, p);
+
+	cout << "Baby Giant Step: " << "\n";
+	auto babyGiantStep_result = BabyGiantStep::calculate(a, y, p);
+
+	for (const auto& res : babyGiantStep_result) {
+		cout << res << " ";
+		if (y == FastMath::modExp(a, res, p)) {
+			cout << "OK ";
 		}
-
-		auto x = dist(rng);
-
-		auto y = FastMath::modExp(a, x, p);
-
-		cout << "Baby Giant Step: " << "\n";
-		auto babyGiantStep_result = BabyGiantStep::calculate(a, y, p);
-
-		for (const auto& res : babyGiantStep_result) {
-			cout << res << " ";
-			if (y == FastMath::modExp(a, res, p)) {
-				cout << "OK ";
-			}
-			else {
-				cout << "ERROR ";
-				return -1;
-			}
-			cout << "\n";
+		else {
+			cout << "ERROR ";
+			return -1;
 		}
+		cout << "\n";
 	}
 
 	cout << "\n";
