@@ -54,7 +54,7 @@ public:
 	}
 
 	std::string setNumber(std::string number) {
-		bool isValid = std::regex_match(number, std::regex("[0-9]"));
+		bool isValid = std::regex_match(number, std::regex("[0-9]+"));
 		if (!isValid) {
 			throw std::invalid_argument("Number is not valid");
 		}
