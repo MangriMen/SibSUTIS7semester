@@ -50,22 +50,22 @@ namespace lab12Tests
 			proc.performOperation();
 
 			auto expectedValue = proc.getLeftOperand();
-			auto actualValue = 2;
+			auto actualValue = 5;
 
 			Assert::IsTrue(expectedValue == actualValue);
 		}
 
 		TEST_METHOD(TestPerformOperation_Sub) {
 			auto proc = Processor<int>();
-			proc.setLeftOperand(2);
-			proc.setRightOperand(3);
+			proc.setLeftOperand(3);
+			proc.setRightOperand(2);
 
 			proc.setState(Processor<int>::Operation::Sub);
 
 			proc.performOperation();
 
 			auto expectedValue = proc.getLeftOperand();
-			auto actualValue = 2;
+			auto actualValue = -1;
 
 			Assert::IsTrue(expectedValue == actualValue);
 		}
@@ -80,15 +80,15 @@ namespace lab12Tests
 			proc.performOperation();
 
 			auto expectedValue = proc.getLeftOperand();
-			auto actualValue = 2;
+			auto actualValue = 6;
 
 			Assert::IsTrue(expectedValue == actualValue);
 		}
 
 		TEST_METHOD(TestPerformOperation_Dvd) {
 			auto proc = Processor<int>();
-			proc.setLeftOperand(2);
-			proc.setRightOperand(3);
+			proc.setLeftOperand(5);
+			proc.setRightOperand(10);
 
 			proc.setState(Processor<int>::Operation::Dvd);
 
