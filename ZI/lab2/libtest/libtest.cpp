@@ -6,7 +6,7 @@
 namespace fs = std::filesystem;
 
 void shamir(const std::string& file) {
-	long long P = encryption::Shamir::generatePublicP();
+	unsigned long long P = encryption::Shamir::generatePublicP();
 
 	encryption::Shamir A(P);
 	encryption::Shamir B(P);
@@ -65,8 +65,8 @@ void rsa(const std::string& file) {
 	auto encrypted = rsa.encryptFile(file);
 	Utils::writeBytesAsFile("output/rsa_enc_" + file, encrypted);
 
-	Utils::writeBytesAsFile("outpyt/rsa_key_public", rsa.getPublicKey());
-	Utils::writeBytesAsFile("outpyt/rsa_key_private", std::vector<unsigned long long> { rsa.getPrivateKey()});
+	Utils::writeBytesAsFile("output/rsa_key_public", rsa.getPublicKey());
+	Utils::writeBytesAsFile("output/rsa_key_private", std::vector<unsigned long long> { rsa.getPrivateKey()});
 
 	auto decrypted = rsa.decryptFile("output/rsa_enc_" + file);
 	Utils::writeBytesAsFile("output/rsa_dec_" + file, decrypted);
@@ -79,7 +79,7 @@ int main()
 		fs::create_directory(folder);
 	}
 
-	std::string filename = "angel-mech.jpg";
+	std::string filename = "Alexander.jpg";
 
 	shamir(filename);
 	gamal(filename);

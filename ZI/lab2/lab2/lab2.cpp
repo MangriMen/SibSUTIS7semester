@@ -58,7 +58,7 @@ namespace encryption {
 			std::vector<unsigned long long> x3(prevX.size());
 			for (size_t i = 0; i < x3.size(); i++)
 			{
-				x3.push_back(crypto::FastMath::modExp(prevX[i], getD(), P));
+				x3[i] = crypto::FastMath::modExp(prevX[i], getD(), P);
 			}
 			return x3;
 		}
