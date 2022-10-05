@@ -1,28 +1,28 @@
 #include "pch.h"
 #include "CppUnitTest.h"
-#include "../lab8/PNumberEditor.h"
+#include "../lab9/FractionEditor.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-namespace lab8Tests
+namespace lab9Tests
 {
-	TEST_CLASS(lab8Tests)
+	TEST_CLASS(lab9Tests)
 	{
 	public:
-
-		TEST_METHOD(TestPNumberEditor)
+		
+		TEST_METHOD(TestFractionEditor)
 		{
-			auto editor = PNumberEditor();
+			auto editor = FractionEditor();
 
 			auto expectedValue = editor.getNumber();
-			auto actualValue = ZERO;
+			auto actualValue = FractionEditor::ZERO;
 
 			Assert::IsTrue(expectedValue == actualValue);
 		}
 
 		TEST_METHOD(TestIsNull)
 		{
-			auto editor = PNumberEditor();
+			auto editor = FractionEditor();
 
 			auto expectedValue = editor.isNull();
 			auto actualValue = true;
@@ -32,77 +32,77 @@ namespace lab8Tests
 
 		TEST_METHOD(TestAppendNumber)
 		{
-			auto editor = PNumberEditor();
+			auto editor = FractionEditor();
 			editor.appendNumber(2);
 
 
 			auto expectedValue = editor.getNumber();
-			auto actualValue = "02";
+			auto actualValue = "0/12";
 
 			Assert::IsTrue(expectedValue == actualValue);
 		}
 
 		TEST_METHOD(TestAppendZero)
 		{
-			auto editor = PNumberEditor();
+			auto editor = FractionEditor();
 			editor.appendZero();
 
 			auto expectedValue = editor.getNumber();
-			auto actualValue = "00";
+			auto actualValue = "0/10";
 
 			Assert::IsTrue(expectedValue == actualValue);
 		}
 
 		TEST_METHOD(TestPopNumberBack)
 		{
-			auto editor = PNumberEditor();
+			auto editor = FractionEditor();
 			editor.appendNumber(2);
 			editor.appendNumber(4);
 			editor.popNumberBack();
 
 			auto expectedValue = editor.getNumber();
-			auto actualValue = "02";
+			auto actualValue = "0/12";
 
 			Assert::IsTrue(expectedValue == actualValue);
 		}
 
 		TEST_METHOD(TestClear)
 		{
-			auto editor = PNumberEditor();
+			auto editor = FractionEditor();
 			editor.appendNumber(2);
 			editor.appendNumber(4);
 			editor.clear();
 
 			auto expectedValue = editor.getNumber();
-			auto actualValue = ZERO;
+			auto actualValue = FractionEditor::ZERO;
 
 			Assert::IsTrue(expectedValue == actualValue);
 		}
 
 		TEST_METHOD(TestGetNumber)
 		{
-			auto editor = PNumberEditor();
+			auto editor = FractionEditor();
 
 			auto expectedValue = editor.getNumber();
-			auto actualValue = "0";
+			auto actualValue = "0/1";
 
 			Assert::IsTrue(expectedValue == actualValue);
 		}
 
 		TEST_METHOD(TestSetNumber_1)
 		{
-			auto editor = PNumberEditor();
-			editor.setNumber("245");
+			auto editor = FractionEditor();
+			editor.setNumber("2/245");
 
 			auto expectedValue = editor.getNumber();
-			auto actualValue = "245";
+			auto actualValue = "2/245";
 
 			Assert::IsTrue(expectedValue == actualValue);
 		}
 
 		TEST_METHOD(TestSetNumber_2)
 		{
-			auto editor = PNumberEditor();
+			auto editor = FractionEditor();
 
 			auto triggerException = [&]() {editor.setNumber("test"); };
 

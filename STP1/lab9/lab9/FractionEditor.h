@@ -1,23 +1,38 @@
 #pragma once
 #include <iostream>
+#include <string>
+#include <vector>
 #include <regex>
-#include "../../lab7/lab7/PNumber.h"
 
-const std::string ZERO("0");
-const std::string FLOAT_DELIMETER(".");
+std::vector<std::string> split(std::string s, std::string delimiter) {
+	size_t pos_start = 0, pos_end, delim_len = delimiter.length();
+	std::string token;
+	std::vector<std::string> res;
 
-class PNumberEditor
+	while ((pos_end = s.find(delimiter, pos_start)) != std::string::npos) {
+		token = s.substr(pos_start, pos_end - pos_start);
+		pos_start = pos_end + delim_len;
+		res.push_back(token);
+	}
+
+	res.push_back(s.substr(pos_start));
+	return res;
+}
+
+class FractionEditor
 {
 private:
 	std::string current_number;
 
 public:
-	PNumberEditor() {
+	inline static const std::string ZERO = "0/1";
+
+	FractionEditor() {
 		clear();
 	}
 
 	bool isNull() {
-		return split(current_number, " ")[0] == "0";
+		return split(current_number, " ")[0] == ZERO;
 	}
 
 	std::string toggleNegative() {
@@ -54,11 +69,12 @@ public:
 	}
 
 	std::string setNumber(std::string number) {
-		bool isValid = std::regex_match(number, std::regex("[0-9]+"));
+		bool isValid = std::regex_match(number, std::regex("[0-9]+/[0-9]+"));
 		if (!isValid) {
 			throw std::invalid_argument("Number is not valid");
 		}
 		current_number = number;
 		return current_number;
 	}
+
 };
