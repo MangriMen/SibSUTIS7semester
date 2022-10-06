@@ -295,8 +295,16 @@ namespace encryption {
 		return std::vector<unsigned long long> {e, n};
 	}
 
+	void RSA::setPublicKey(const std::vector<unsigned long long>& key) {
+		e = key[0];
+		n = key[1];
+	}
+
 	unsigned long long RSA::getPrivateKey() {
 		return d;
+	}
+	void RSA::setPrivateKey(unsigned long long key) {
+		d = key;
 	}
 	// RSA
 }
