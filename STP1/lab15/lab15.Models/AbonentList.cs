@@ -86,25 +86,40 @@ public class AbonentList : INotifyPropertyChanged
     public void Add(string name, int phone)
     {
         _ = _abonents.TryAdd(name, new());
+        if (_abonents[name].Contains(phone))
+        {
+            return;
+        }
         _abonents[name].Add(phone);
         _abonents[name].Sort();
 
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Abonents)));
-
-        WriteAbonentsToFile();
     }
 
-    public void Edit(string name, int phone, int newPhone)
+    public void Edit(string name, int phone, string newName, int newPhone)
     {
-        List<int>? registry;
-        if (_abonents.TryGetValue(name, out registry))
+        if (!_abonents.ContainsKey(name))
         {
-            registry.Remove(phone);
-            registry.Add(newPhone);
-            registry.Sort();
+            return;
         }
 
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Abonents)));
+        if (name == newName && phone == newPhone)
+        {
+            return;
+        }
+
+        if (name == newName)
+        {
+            _abonents[name].Remove(phone);
+            _abonents[name].Add(newPhone);
+            _abonents[name].Sort();
+        }
+
+        if (phone == newPhone)
+        {
+            _abonents.TryAdd(newName, _abonents[name]);
+            _abonents.Remove(name);
+        }
     }
 
     public void Remove(string name, int phone)
@@ -117,8 +132,6 @@ public class AbonentList : INotifyPropertyChanged
         }
 
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Abonents)));
-
-        WriteAbonentsToFile();
     }
 
     public void Clear()
@@ -126,7 +139,10 @@ public class AbonentList : INotifyPropertyChanged
         _abonents.Clear();
 
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Abonents)));
+    }
 
+    public void Save()
+    {
         WriteAbonentsToFile();
     }
 
