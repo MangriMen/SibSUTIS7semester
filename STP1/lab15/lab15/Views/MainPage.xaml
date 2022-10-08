@@ -18,8 +18,8 @@
         </Grid.RowDefinitions>
 
         <TextBox
+            x:Uid="FindField"
             Grid.Row="0"
-            Header="Поиск"
             TextChanging="{x:Bind ViewModel.FindHandler}" />
         <Grid
             Grid.Row="1"
@@ -42,31 +42,34 @@
                 Grid.Row="0"
                 Grid.RowSpan="5"
                 Grid.Column="0">
-                <community:DataGrid
-                    CellEditEnding="{x:Bind ViewModel.EditHandler}"
-                    ItemsSource="{x:Bind ViewModel.Abonents, Mode=OneWay}"
-                    SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                    SelectionMode="Single" />
+                <Border CornerRadius="6">
+                    <community:DataGrid
+                        CanUserReorderColumns="False"
+                        CellEditEnding="{x:Bind ViewModel.EditHandler}"
+                        ItemsSource="{x:Bind ViewModel.Abonents, Mode=OneWay}"
+                        SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        SelectionMode="Single" />
+                </Border>
             </ScrollViewer>
 
             <Button
+                x:Uid="ClearButton"
                 Grid.Row="0"
                 Grid.Column="1"
                 HorizontalAlignment="Stretch"
-                Click="{x:Bind ViewModel.ClearHandler}"
-                Content="Очистить" />
+                Click="{x:Bind ViewModel.ClearHandler}" />
             <Button
+                x:Uid="SaveButton"
                 Grid.Row="1"
                 Grid.Column="1"
                 HorizontalAlignment="Stretch"
-                Click="{x:Bind ViewModel.SaveHandler}"
-                Content="Сохранить" />
+                Click="{x:Bind ViewModel.SaveHandler}" />
             <Button
+                x:Uid="RemoveButton"
                 Grid.Row="2"
                 Grid.Column="1"
                 HorizontalAlignment="Stretch"
-                Click="{x:Bind ViewModel.RemoveHandler}"
-                Content="Удалить" />
+                Click="{x:Bind ViewModel.RemoveHandler}" />
         </Grid>
         <Grid
             Grid.Row="2"
@@ -79,20 +82,20 @@
             </Grid.ColumnDefinitions>
 
             <TextBox
+                x:Uid="AbonentName"
                 Grid.Column="0"
-                Header="ФИО"
                 Text="{x:Bind ViewModel.AbonentName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <TextBox
+                x:Uid="PhoneNumber"
                 Grid.Column="1"
-                Header="Номер"
                 Text="{x:Bind ViewModel.AbonentPhone, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <Button
+                x:Uid="AddButton"
                 Grid.Column="2"
                 MinWidth="90"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Bottom"
-                Click="{x:Bind ViewModel.AddHandler}"
-                Content="{x:Bind ViewModel.AddEditButtonText, Mode=OneWay}" />
+                Click="{x:Bind ViewModel.AddHandler}" />
         </Grid>
     </Grid>
 </Page>

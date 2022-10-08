@@ -124,27 +124,27 @@
     <value>lab15</value>
   </data>
   <data name="Shell_Main.Content" xml:space="preserve">
-    <value>Phone book</value>
+    <value>Телефонная книга</value>
   </data>
   <data name="AbonentName.Header" xml:space="preserve">
-    <value>Full name</value>
+    <value>ФИО</value>
   </data>
   <data name="AddButton.Content" xml:space="preserve">
-    <value>Add</value>
+    <value>Добавить</value>
   </data>
   <data name="ClearButton.Content" xml:space="preserve">
-    <value>Clear</value>
+    <value>Очистить</value>
   </data>
   <data name="FindField.Header" xml:space="preserve">
-    <value>Find</value>
+    <value>Поиск</value>
   </data>
   <data name="PhoneNumber.Header" xml:space="preserve">
-    <value>Number</value>
+    <value>Номер</value>
   </data>
   <data name="RemoveButton.Content" xml:space="preserve">
-    <value>Remove</value>
+    <value>Удалить</value>
   </data>
   <data name="SaveButton.Content" xml:space="preserve">
-    <value>Save</value>
+    <value>Сохранить</value>
   </data>
 </root>

@@ -14,22 +14,20 @@ public class MainViewModel : ObservableRecipient
 {
     private readonly AbonentList _abonents;
 
+    private string _abonentName = "";
+    private string _abonentPhone = "";
+
     public struct Abonent
     {
-        public string Имя
+        public string Name
         {
-            get;set;
+            get; set;
         }
 
-        public int Номер
+        public int Number
         {
-            get;set;
+            get; set;
         }
-    }
-
-    public string FindQuery
-    {
-        get;set;
     }
 
     public ReadOnlyObservableCollection<Abonent> Abonents
@@ -37,7 +35,8 @@ public class MainViewModel : ObservableRecipient
         get
         {
             ILookup<string, List<int>> abonents;
-            if (string.IsNullOrWhiteSpace(FindQuery)) {
+            if (string.IsNullOrWhiteSpace(FindQuery))
+            {
                 abonents = _abonents.Abonents;
             }
             else
@@ -50,26 +49,12 @@ public class MainViewModel : ObservableRecipient
             {
                 foreach (var phone in abonent.Single())
                 {
-                    listAbonents.Add(new Abonent() { Имя = abonent.Key, Номер = phone });
+                    listAbonents.Add(new Abonent() { Name = abonent.Key, Number = phone });
                 }
             }
             return new ReadOnlyObservableCollection<Abonent>(listAbonents);
         }
     }
-
-    public object? SelectedItem
-    {
-        get; set;
-    }
-
-    public bool IsEditing
-    {
-        get; set;
-    }
-    public string AddEditButtonText => IsEditing ? "Сохранить" : "Добавить";
-
-    private string _abonentName = "";
-    private string _abonentPhone = "";
 
     public string AbonentName
     {
@@ -80,7 +65,6 @@ public class MainViewModel : ObservableRecipient
             OnPropertyChanged(nameof(AbonentName));
         }
     }
-
     public string AbonentPhone
     {
         get => _abonentPhone;
@@ -89,6 +73,16 @@ public class MainViewModel : ObservableRecipient
             _abonentPhone = value;
             OnPropertyChanged(nameof(AbonentPhone));
         }
+    }
+
+    public string FindQuery
+    {
+        get; set;
+    } = "";
+
+    public object? SelectedItem
+    {
+        get; set;
     }
 
     public MainViewModel()
@@ -134,17 +128,12 @@ public class MainViewModel : ObservableRecipient
                 {
                     return;
                 }
-                _abonents.Edit(abonent.Имя, abonent.Номер, abonent.Имя, parsedAbonentNumber);
+                _abonents.Edit(abonent.Name, abonent.Number, abonent.Name, parsedAbonentNumber);
                 break;
             case "Имя":
-                _abonents.Edit(abonent.Имя, abonent.Номер, textBox.Text, abonent.Номер);
+                _abonents.Edit(abonent.Name, abonent.Number, textBox.Text, abonent.Number);
                 break;
         }
-    }
-
-    public void SaveHandler(object sender, RoutedEventArgs e)
-    {
-        _abonents.Save();
     }
 
     public void RemoveHandler(object sender, RoutedEventArgs e)
@@ -156,7 +145,7 @@ public class MainViewModel : ObservableRecipient
 
         var abonent = (Abonent)SelectedItem;
 
-        _abonents.Remove(abonent.Имя, abonent.Номер);
+        _abonents.Remove(abonent.Name, abonent.Number);
     }
 
     public void ClearHandler(object sender, RoutedEventArgs e)
@@ -180,5 +169,10 @@ public class MainViewModel : ObservableRecipient
 
         FindQuery = sender.Text;
         OnPropertyChanged(nameof(Abonents));
+    }
+
+    public void SaveHandler(object sender, RoutedEventArgs e)
+    {
+        _abonents.Save();
     }
 }
