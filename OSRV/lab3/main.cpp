@@ -49,18 +49,24 @@ struct Car {
 
 void* process_storage(Storage& storage)
 {
+    while (true) {
+        usleep(16000);
+    }
 }
 
 void* process_boiler(Boiler& boiler)
 {
+    while (true) {
+        usleep(16000);
+    }
 }
 
 void* process_car(Car& car)
 {
     while (true) {
-        Fill(car.shape, Color::Yellow);
-        usleep(100000 * 10);
-        Fill(car.shape, car.color);
+        // Fill(car.shape, Color::Yellow);
+        // usleep(100000 * 10000);
+        // Fill(car.shape, car.color);
         usleep(16000);
     }
 }
@@ -92,11 +98,11 @@ int main()
     }
 
     for (size_t i = 0; i < boilers.size(); i++) {
-        pthread_create(&threads[i], NULL, (void* (*)(void*))process_boiler, &boilers[i]);
+        pthread_create(&threads[i + cars.size()], NULL, (void* (*)(void*))process_boiler, &boilers[i]);
     }
 
     for (size_t i = 0; i < storages.size(); i++) {
-        pthread_create(&threads[i], NULL, (void* (*)(void*))process_storage, &storages[i]);
+        pthread_create(&threads[i + cars.size() + boilers.size()], NULL, (void* (*)(void*))process_storage, &storages[i]);
     }
 
     char input_char = 0;

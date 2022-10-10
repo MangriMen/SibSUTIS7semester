@@ -3,7 +3,7 @@
     "commands": [
       {
         "match": "\\.cpp$",
-        "cmd": "scp ${file} 192.168.56.1:~/osrv/lab3"
+        "cmd": "scp -P 3022 ${file} root@192.168.56.1:~/osrv/lab3"
       }
     ]
   },
