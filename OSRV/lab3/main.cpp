@@ -1,23 +1,46 @@
 #include <iostream>
 #include <vector>
 #include <array>
+#include <unistd.h>
+#include <pthread.h>
+#include <sys/neutrino.h>
 #include <vingraph.h>
 
 using namespace std;
 
+class Channel {
+public:
+    static int boiler_channel;
+    static int storage_channel;
+};
+
+int Channel::boiler_channel = 0;
+int Channel::storage_channel = 0;
+
+class Connection {
+public:
+    static int boiler_connection;
+    static int storage_connection;
+};
+
+int Connection::boiler_connection = 0;
+int Connection::storage_connection = 0;
+
 enum Color {
     Black = RGB(0, 0, 0),
     Blue = RGB(33, 150, 243),
+    Green = RGB(59, 255, 235),
     Yellow = RGB(255, 235, 59),
     White = RGB(255, 255, 255),
 };
 
 struct Storage {
+    const static int blocks = 10;
+
     int x;
     int y;
     int z;
     Color color;
-    const static int capacity = 10;
 
     Storage() = default;
 
@@ -29,7 +52,10 @@ struct Storage {
 };
 
 struct Boiler {
-    int id;
+    const static int blocks = 10;
+
+    int x;
+    int y;
 };
 
 struct Car {
@@ -49,24 +75,64 @@ struct Car {
 
 void* process_storage(Storage& storage)
 {
+    static int block_width = 60;
+    static int block_height = 20;
+
+    static int block_spacing = 4;
+
+    array<int, Storage::blocks> blocks;
+    for (size_t i = 0; i < storage.blocks; i++) {
+        blocks[i] = Rect(storage.x, storage.y + (block_height + block_spacing) * i, block_width, block_height, 6, Color::Green);
+    }
+
     while (true) {
+        for (size_t i = 0; i < blocks.size(); i++) {
+            Show(blocks[i]);
+            Fill(blocks[i], Color::Green);
+            usleep(1000000);
+        }
         usleep(16000);
     }
 }
 
 void* process_boiler(Boiler& boiler)
 {
+    static int block_width = 60;
+    static int block_height = 20;
+
+    static int block_spacing = 4;
+
+    array<int, Boiler::blocks> blocks;
+    for (size_t i = 0; i < boiler.blocks; i++) {
+        blocks[i] = Rect(boiler.x, boiler.y + (block_height + block_spacing) * i, block_width, block_height, 6, Color::Yellow);
+    }
+
+    int fill_counter = boiler.x > 350 ? 0 : 1;
+
     while (true) {
+        if (fill_counter == 0) {
+            MsgSend(Connection::boiler_connection, &boiler, sizeof(boiler), &fill_counter, sizeof(fill_counter));
+        }
+        // for (size_t i = 0; i < blocks.size(); i++) {
+        //     Show(blocks[i]);
+        //     Fill(blocks[i], Color::Yellow);
+        //     usleep(1000000);
+        // }
+        usleep(1000000 * 1000);
         usleep(16000);
     }
 }
 
 void* process_car(Car& car)
 {
+    Boiler current_boiler;
     while (true) {
-        // Fill(car.shape, Color::Yellow);
-        // usleep(100000 * 10000);
-        // Fill(car.shape, car.color);
+        int recieve_msg_id = MsgReceive(Channel::boiler_channel, &current_boiler, sizeof(current_boiler), 0);
+        for (size_t i = car.x; i < current_boiler.x + 30 - 16; i += 2) {
+            MoveTo(i, car.y, car.shape);
+            usleep(16000);
+        }
+
         usleep(16000);
     }
 }
@@ -75,25 +141,34 @@ int main()
 {
     ConnectGraph();
 
+    Channel::boiler_channel = ChannelCreate(0);
+    Channel::storage_channel = ChannelCreate(0);
+
+    Connection::boiler_connection = ConnectAttach(0, 0, Channel::boiler_channel, 0, 0);
+    Connection::storage_connection = ConnectAttach(0, 0, Channel::storage_channel, 0, 0);
+
+    Line(20, 90, 80 * 6 - 20, 90, Color::White);
+
     array<Car, 1> cars {
         Car(0, 0, -1, Color::White)
     };
 
     array<Boiler, 4> boilers;
     for (size_t i = 0; i < boilers.size(); i++) {
-        boilers[i].id = i;
+        boilers[i].x = 160 + i * (60 + 20);
+        boilers[i].y = 100;
     }
 
     array<Storage, 1> storages {
-        Storage(440, 440, 30, Color::Blue)
+        Storage(20, 100, 30, Color::Blue)
     };
 
     vector<pthread_t> threads(cars.size() + boilers.size() + storages.size());
 
     for (size_t i = 0; i < cars.size(); i++) {
-        cars[i].x = 40 + 20 * i;
-        cars[i].y = 105;
-        cars[i].shape = Rect(cars[i].x, cars[i].y, 40, 40, 8, cars[i].color);
+        cars[i].x = 33;
+        cars[i].y = 50;
+        cars[i].shape = Rect(cars[i].x, cars[i].y, 32, 32, 6, cars[i].color);
         pthread_create(&threads[i], NULL, (void* (*)(void*))process_car, &cars[i]);
     }
 
@@ -104,6 +179,8 @@ int main()
     for (size_t i = 0; i < storages.size(); i++) {
         pthread_create(&threads[i + cars.size() + boilers.size()], NULL, (void* (*)(void*))process_storage, &storages[i]);
     }
+
+    SetColor(Color::White);
 
     char input_char = 0;
     while (true) {
