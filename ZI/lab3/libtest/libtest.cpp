@@ -65,22 +65,6 @@ void gamal(const std::string& file) {
 	std::cout << "El Gamal: " << (isRightSign ? "sign is correct" : "sign is incorrect") << "\n";
 }
 
-//void GOST(const std::string& file) {
-//	auto message = Utils::readFileAsBytes(file);
-//
-//	auto [p, q, a] = sign::GOST_P34_10_94::generateParameters();
-//	sign::GOST_P34_10_94 GOST_1(p, q, a);
-//
-//	auto sign = GOST_1.signMessage(message);
-//	Utils::writeBytesAsFile("output/GOST_signed", sign);
-//
-//	sign::GOST_P34_10_94 GOST_2(p, q, a);
-//	auto signFromFile = Utils::readFileAsBytes<uint64_t>("output/GOST_signed");
-//	bool isRightSign = GOST_2.validateSign(message, sign);
-//
-//	std::cout << "GOST: " << (isRightSign ? "sign is correct" : "sign is incorrect") << "\n";
-//}
-
 int main()
 {
 	std::string folder = "output";
@@ -88,9 +72,8 @@ int main()
 		fs::create_directory(folder);
 	}
 
-	std::string filename = "eng.txt";
+	std::string filename = "angel-mech.jpg";
 
 	rsa(filename);
 	gamal(filename);
-	//GOST(filename);
 }
