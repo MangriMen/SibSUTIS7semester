@@ -95,6 +95,9 @@ namespace encryption {
 		std::vector<char> decryptFile(const std::string& file);
 
 		std::vector<unsigned long long> getPublicKey();
+		void setPublicKey(const std::vector<unsigned long long>& key);
+
 		unsigned long long getPrivateKey();
+		void setPrivateKey(unsigned long long key);
 	};
 }
