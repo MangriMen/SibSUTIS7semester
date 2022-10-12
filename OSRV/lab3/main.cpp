@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <array>
+#include <random>
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/neutrino.h>
@@ -29,7 +30,7 @@ int Connection::storage_connection = 0;
 enum Color {
     Black = RGB(0, 0, 0),
     Blue = RGB(33, 150, 243),
-    Green = RGB(59, 255, 235),
+    Cyan = RGB(59, 255, 235),
     Yellow = RGB(255, 235, 59),
     White = RGB(255, 255, 255),
 };
@@ -84,16 +85,25 @@ void* process_storage(Storage& storage)
     for (size_t i = 0; i < storage.blocks; i++) {
         blocks[i]
             = Rect(storage.x, storage.y + (block_height + block_spacing) * i,
-                block_width, block_height, 6, Color::Green);
+                block_width, block_height, 6, Color::Cyan);
     }
 
+    int block_count = 0;
     while (true) {
-        for (size_t i = 0; i < blocks.size(); i++) {
-            Show(blocks[i]);
-            Fill(blocks[i], Color::Green);
-            usleep(1000000);
+        block_count = rand() % (storage.blocks - 1) + 1;
+        for (size_t i = 0; i < block_count; i++) {
+            Fill(blocks[i], Color::Cyan);
+            usleep(100000);
         }
-        usleep(16000);
+
+        int car_message = MsgReceive(Channel::storage_channel, 0, 0, 0);
+
+        for (int64_t i = block_count - 1; i >= 0; i--) {
+            usleep(100000);
+            Fill(blocks[i], Color::Black);
+        }
+
+        MsgReply(car_message, 0, &block_count, sizeof(block_count));
     }
 }
 
@@ -111,20 +121,23 @@ void* process_boiler(Boiler& boiler)
                 block_width, block_height, 6, Color::Yellow);
     }
 
-    int fill_counter = boiler.x > 350 ? 0 : 1;
+    int block_count = 0;
 
     while (true) {
-        if (fill_counter == 0) {
-            MsgSend(Connection::boiler_connection, &boiler, sizeof(boiler),
-                &fill_counter, sizeof(fill_counter));
+        MsgSend(Connection::boiler_connection, &boiler, sizeof(boiler),
+            &block_count, sizeof(block_count));
+        for (size_t i = 0; i < block_count; i++) {
+            Fill(blocks[i], Color::Yellow);
+            usleep(100000);
         }
-        // for (size_t i = 0; i < blocks.size(); i++) {
-        //     Show(blocks[i]);
-        //     Fill(blocks[i], Color::Yellow);
-        //     usleep(1000000);
-        // }
-        usleep(1000000 * 1000);
-        usleep(16000);
+
+        for (int64_t i = block_count - 1; i >= 0; i--) {
+            Fill(blocks[i], Color::Black);
+            if (i == 2) {
+                MsgSendPulse(Connection::boiler_connection, 10, 0, 0);
+            }
+            usleep(2000000);
+        }
     }
 }
 
@@ -137,38 +150,38 @@ void* process_car(Car& car)
     tPoint carPos = GetPos(car.shape);
     tPoint carSize = GetDim(car.shape);
 
+    int block_count = 0;
+
     while (true) {
+        int boiler_message = MsgReceive(Channel::boiler_channel,
+            &current_boiler, sizeof(current_boiler), 0);
 
-        if (fill_counter == 0) {
-            int storage_msg = MsgReceive(Channel::storage_channel,
-                &current_storage, sizeof(current_storage), 0);
-
-            carPos = GetPos(car.shape);
-            for (size_t i = carPos.x; i - current_storage.x + carSize.x / 2 > 1;
-                 i += 2 * ((i - current_storage.x) > 0 ? 1 : -1)) {
-                MoveTo(i, carPos.y, car.shape);
-                usleep(16000);
-            }
-        }
-
-        int boiler_msg = MsgReceive(Channel::boiler_channel, &current_boiler,
-            sizeof(current_boiler), 0);
+        MsgSend(Connection::storage_connection, 0, 0, &block_count,
+            sizeof(block_count));
+        Fill(car.shape, Color::Yellow);
 
         carPos = GetPos(car.shape);
-        for (size_t i = carPos.x; i < current_boiler.x + carSize.x / 2;
-             i += 2) {
+        for (size_t i = carPos.x; i < current_boiler.x + carSize.x / 2; i++) {
             MoveTo(i, carPos.y, car.shape);
-            usleep(16000);
+            usleep(1000);
         }
 
-        // MsgSend();
+        MsgReply(boiler_message, 0, &block_count, sizeof(block_count));
 
-        usleep(16000);
+        usleep(100000 * block_count);
+        Fill(car.shape, Color::Black);
+
+        for (int64_t i = current_boiler.x; i >= carPos.x; i--) {
+            MoveTo(i, carPos.y, car.shape);
+            usleep(1000);
+        }
     }
 }
 
 int main()
 {
+    srand(time(NULL));
+
     ConnectGraph();
 
     Channel::boiler_channel = ChannelCreate(0);
@@ -181,7 +194,8 @@ int main()
 
     Line(20, 90, 80 * 6 - 20, 90, Color::White);
 
-    array<Car, 1> cars { Car(0, 0, -1, Color::White) };
+    array<Car, 2> cars { Car(0, 0, -1, Color::White),
+        Car(0, 0, -1, Color::White) };
 
     array<Boiler, 4> boilers;
     for (size_t i = 0; i < boilers.size(); i++) {
