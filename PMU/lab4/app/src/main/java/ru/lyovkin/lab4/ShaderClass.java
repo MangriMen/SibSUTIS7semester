@@ -77,8 +77,8 @@ public class ShaderClass {
                 "{" +
                 "float Ns = 13.0;" +
                 "float kd = 0.7, ks = 1.0;" +
-                "vec4 light = vec4(0.7, 0.9, 0.0, 1.0);" +
-                "vec4 lightS = vec4(1.0, 0.0, 0.5, 1.0);" +
+                "vec4 light = vec4(1.0, 1.0, 1.0, 1.0);" +
+                "vec4 lightS = vec4(1.0, 1.0, 0.2, 1.0);" +
                 "vec3 Nn = normalize(varyingNormal);" +
                 "vec3 Ln = normalize(lightDir);" +
                 "vec4 diffuse = kd * light * max(dot(Nn, Ln), 0.0);" +

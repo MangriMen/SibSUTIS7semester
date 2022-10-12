@@ -51,7 +51,7 @@ public class MyRenderEngine implements GLSurfaceView.Renderer
         float angle = (float) (Math.cos((float)(SystemClock.uptimeMillis() % TIME) / TIME  *  2 * Math.PI) * 4f);
 
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT|GLES20.GL_DEPTH_BUFFER_BIT);
-        GLES20.glClearColor(1.0f, 0.5f, 0.5f, 0.5f);
+        GLES20.glClearColor(1.0f, 0.2f, 1.0f, 1.0f);
 
         Matrix.setLookAtM(vm_matrix, 0, -1, 0, -1f, -1f, 0f, 0f, 25.0f, 5.0f, 25.0f);
         Matrix.multiplyMM(pvm_matrix, 0, projection_matrix, 0, vm_matrix, 0);
