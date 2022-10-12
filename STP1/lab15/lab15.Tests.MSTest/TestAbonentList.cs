@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using lab15.Models;
 
 namespace lab15.Tests.MSTest;
