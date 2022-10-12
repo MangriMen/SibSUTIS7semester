@@ -1,0 +1,35 @@
+{
+  "emeraldwalk.runonsave": {
+    "commands": [
+      {
+        "match": "\\.cpp$",
+        "cmd": "scp -P 3022 ${file} root@192.168.56.1:~/osrv/lab3"
+      }
+    ]
+  },
+  "files.associations": {
+    "iostream": "cpp",
+    "array": "cpp",
+    "atomic": "cpp",
+    "bit": "cpp",
+    "cmath": "cpp",
+    "compare": "cpp",
+    "cstddef": "cpp",
+    "istream": "cpp",
+    "limits": "cpp",
+    "memory": "cpp",
+    "new": "cpp",
+    "ostream": "cpp",
+    "system_error": "cpp",
+    "tuple": "cpp",
+    "type_traits": "cpp",
+    "utility": "cpp",
+    "vector": "cpp",
+    "xlocnum": "cpp",
+    "xmemory": "cpp",
+    "xstring": "cpp",
+    "xtr1common": "cpp",
+    "xutility": "cpp"
+  },
+  "C_Cpp.errorSquiggles": "Enabled"
+}
