@@ -181,7 +181,7 @@ void* process_car(Car& car)
 int main()
 {
     srand(time(NULL));
-
+    
     ConnectGraph();
 
     Channel::boiler_channel = ChannelCreate(0);

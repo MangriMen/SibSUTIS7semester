@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using lab15.Models;
 
 namespace lab15.Tests.MSTest;
@@ -47,7 +47,7 @@ public class TestAbonentList
         abonents.Add("Kyle", 24812);
         abonents.Add("Ale", 15456);
 
-        var abonentsList = abonents.GetAbonents();
+        var abonentsList = abonents.Abonents;
 
         Assert.IsNotNull(abonentsList);
         Assert.AreEqual(2, abonentsList.Count);
@@ -65,7 +65,7 @@ public class TestAbonentList
 
         abonents.Clear();
 
-        var abonentsList = abonents.GetAbonents();
+        var abonentsList = abonents.Abonents;
 
         Assert.IsNotNull(abonentsList);
         Assert.AreEqual(0, abonentsList.Count);
