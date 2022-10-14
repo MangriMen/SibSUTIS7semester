@@ -119,6 +119,10 @@ def main() -> None:
 
     cards_count: int = (players_count * cards_in_hand) + cards_on_table
 
+    if (cards_count > len(deck)):
+        print("Error: The deck is smaller than the selected distribution method")
+        exit(-1)
+
     p: int = crypto.getPrimeInBounds(10000, 1e9)
     players = [Player(p) for _ in range(players_count)]
 
@@ -159,8 +163,9 @@ def main() -> None:
         player.set_decoded_cards(
             player.decode_cards(player.decoded_cards))
 
-        table_cards = player.decode_cards_at_other_players(
-            players, table_cards)
+    table_cards = players[-1].decode_cards_at_other_players(
+        players, table_cards)
+    table_cards = players[-1].decode_cards(table_cards)
 
     # Decoded cards print
 
