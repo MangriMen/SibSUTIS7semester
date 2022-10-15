@@ -13,6 +13,7 @@ import kotlin.math.tan
 class SolarSystem(private var context: Context) :
     GLSurfaceView.Renderer {
     private var earth: Globe? = null
+    private var mars: Globe? = null
     private var sun: Globe? = null
     private var moon: Globe? = null
     private val eyePosition = floatArrayOf(0.0f, 0.0f, 0.0f)
@@ -45,6 +46,8 @@ class SolarSystem(private var context: Context) :
         moon?.setPosition(0.0f, 0.0f, -2.5f)
         earth = Globe(50, 50, .3f, 1.0f, gl, context, true, resId)
         earth?.setPosition(0.0f, 0.0f, -2.0f)
+        mars = Globe(50, 50, .2f, 1.0f, gl, context, true, resId)
+        mars?.setPosition(2.0f, 0.2f, -2.2f)
         sun = Globe(50, 50, 1.0f, 1.0f, gl, context, false, 0)
         sun?.setPosition(0.0f, 0.0f, 0.0f)
     }
@@ -84,6 +87,7 @@ class SolarSystem(private var context: Context) :
             angle += orbitalIncrement
             glRotatef(angle, 0.0f, 1.0f, 0.0f)
             executePlanet(earth, gl)
+            executePlanet(mars, gl)
             executePlanet(moon, gl)
             glPopMatrix()
             glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_EMISSION, makeFloatBuffer(paleYellow))
