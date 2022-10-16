@@ -1,4 +1,4 @@
-from hashlib import sha256, sha3_256
+from hashlib import sha256, sha3_256, sha3_512
 from secrets import randbelow, randbits
 import sys
 import crypto
@@ -36,30 +36,36 @@ class Server:
 
 
 def get_hash(num: int):
-    return int.from_bytes(sha256(str(num).encode('ASCII')).digest(), byteorder=sys.byteorder)
+    return int.from_bytes(sha3_256(str(num).encode('ASCII')).digest(), byteorder=sys.byteorder)
 
 
 def main() -> None:
     server = Server()
 
+    # 1.
     rnd = randbits(512)
     vote = 1
     n = vote
 
-    r = 0
+    # 2.
     while True:
         r = crypto.getPrimeInBounds(1, 100)
-        if (crypto.extendedGCD(r, server.N)[0] == 1):
+        if crypto.extendedGCD(r, server.N)[0] == 1:
             break
 
+    # 3.
     h = get_hash(n)
 
-    encoded_h = pow(h * r, server.D, server.N)
+    # 4.
+    encoded_h = (h * pow(r, server.D)) % server.N
 
-    inversed_s = server.receive("alice", encoded_h)
+    # 5.
+    encoded_s = server.receive("alice", encoded_h)
 
-    s = inversed_s * crypto.inverse(r, server.N) % server.N
+    # 6.
+    s = encoded_s * crypto.inverse(r, server.N) % server.N
 
+    # 7.
     server.receive_s("alice", (n, s))
 
     print(server.database)
