@@ -1,3 +1,4 @@
+from math import gcd
 import random
 
 
@@ -65,3 +66,10 @@ def inverse(n, p):
     gcd, inv, _ = extendedGCD(n, p)
     assert gcd == 1
     return inv
+
+
+def getCoprime(a):
+    while True:
+        b = random.randrange(2, a)
+        if gcd(a, b) == 1:
+            return b
