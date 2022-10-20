@@ -8,7 +8,10 @@
     xmlns:models="using:lab4.Models"
     mc:Ignorable="d">
 
-    <Grid x:Name="ContentArea" RowSpacing="16">
+    <Grid
+        x:Name="ContentArea"
+        ColumnSpacing="28"
+        RowSpacing="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
@@ -17,6 +20,11 @@
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="auto" />
+        </Grid.ColumnDefinitions>
 
         <Button Grid.Row="0" Click="Button_Click">Загрузить из файла</Button>
 
@@ -41,7 +49,8 @@
         <ScrollViewer
             Grid.Row="2"
             MinHeight="30"
-            MaxHeight="290">
+            MaxHeight="290"
+            HorizontalScrollBarVisibility="Auto">
             <ListView x:Name="grammarRules" SelectionMode="None" />
         </ScrollViewer>
         <StackPanel Grid.Row="3" Spacing="8">
@@ -52,12 +61,24 @@
                 TextChanging="ChainChanging" />
         </StackPanel>
         <Button Grid.Row="4" Click="CheckClicked">Проверить</Button>
-        <StackPanel Grid.Row="5" Spacing="8">
-            <TextBlock Text="Результат" />
-            <TextBox
-                IsReadOnly="True"
-                Text="{x:Bind Output, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                TextWrapping="Wrap" />
-        </StackPanel>
+        <Grid
+            Grid.Row="1"
+            Grid.RowSpan="4"
+            Grid.Column="1"
+            RowSpacing="8">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="Результат" />
+            <ScrollViewer Grid.Row="1">
+                <TextBox
+                    MinWidth="180"
+                    IsReadOnly="True"
+                    Text="{x:Bind Output, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    TextWrapping="Wrap" />
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </Page>
