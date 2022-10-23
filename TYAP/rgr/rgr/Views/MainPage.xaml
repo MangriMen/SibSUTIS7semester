@@ -59,7 +59,8 @@
                     Grid.Row="0"
                     Grid.Column="0"
                     Header="Алфавит"
-                    Text="{x:Bind Alphabet, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    Text="{x:Bind Alphabet, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    TextChanging="AlphabetChanging" />
                 <TextBox
                     Grid.Row="0"
                     Grid.Column="1"

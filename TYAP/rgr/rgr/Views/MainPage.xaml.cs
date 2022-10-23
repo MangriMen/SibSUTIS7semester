@@ -70,7 +70,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         set
         {
             _alphabetStr = value;
-            _alphabet = value.Replace(" ", "").Split(",").ToList().FindAll(item => item.Length == 1);
+            _alphabet = value.Replace(" ", "").Split(",").Distinct().ToList().FindAll(item => item.Length == 1);
             _alphabet.Sort();
         }
     }
@@ -283,9 +283,13 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         }
 
         var currentRule = 0;
-        foreach (var symbol in StartChain)
+
+        if (StartChain.Length > 0)
         {
-            _grammar[ruleSymbols[currentRule].ToString()] = new() { $"{symbol}{ruleSymbols[++currentRule]}" };
+            foreach (var symbol in StartChain)
+            {
+                _grammar[ruleSymbols[currentRule].ToString()] = new() { $"{symbol}{ruleSymbols[++currentRule]}" };
+            }
         }
         var startChainEndRule = currentRule - 1;
 
@@ -294,16 +298,34 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         {
             _grammar[ruleSymbols[currentRule].ToString()].Add($"{symbol}{ruleSymbols[currentRule]}");
         }
-        foreach (var symbol in _alphabet)
+
+        if (EndChain.Length > 0)
         {
-            _grammar[ruleSymbols[currentRule].ToString()].Add($"{symbol}{ruleSymbols[currentRule + 1]}");
+            foreach (var symbol in _alphabet)
+            {
+                _grammar[ruleSymbols[currentRule].ToString()].Add($"{symbol}{ruleSymbols[currentRule + 1]}");
+            }
+        }
+        else
+        {
+            foreach (var symbol in _alphabet)
+            {
+                _grammar[ruleSymbols[currentRule].ToString()].Add($"{symbol}");
+            }
         }
         currentRule++;
 
-        _grammar[ruleSymbols[startChainEndRule].ToString()].Add($"{StartChain[^1]}{ruleSymbols[currentRule]}");
-        foreach (var symbol in EndChain)
+        if (StartChain.Length > 0)
         {
-            _grammar[ruleSymbols[currentRule].ToString()] = new() { $"{symbol}{ruleSymbols[++currentRule]}" };
+            _grammar[ruleSymbols[startChainEndRule].ToString()].Add($"{StartChain[^1]}{ruleSymbols[currentRule]}");
+        }
+
+        if (EndChain.Length > 0)
+        {
+            foreach (var symbol in EndChain)
+            {
+                _grammar[ruleSymbols[currentRule].ToString()] = new() { $"{symbol}{ruleSymbols[++currentRule]}" };
+            }
         }
 
         foreach (var rule in _grammar)
@@ -316,9 +338,13 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
             RawGrammar = RawGrammar.Remove(RawGrammar.Length - 2, 2);
             RawGrammar += "\n";
         }
-        if (RawGrammar.Length >= 3)
+        if (RawGrammar.Length >= 3 && EndChain.Length > 0)
         {
             RawGrammar = RawGrammar.Remove(RawGrammar.Length - 3, 3);
+        }
+        else if (RawGrammar.Length >= 2)
+        {
+            RawGrammar = RawGrammar.Remove(RawGrammar.Length - 2, 2);
         }
     }
 
@@ -332,6 +358,26 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         }
 
         if (!_alphabet.Contains(sender.Text[sender.SelectionStart - 1].ToString()))
+        {
+            sender.Text = sender.Text.Remove(sender.SelectionStart - 1, 1);
+            sender.SelectionStart = prevSelectionPos - 1;
+            return;
+        }
+    }
+
+    private void AlphabetChanging(TextBox sender, TextBoxTextChangingEventArgs args)
+    {
+        var prevSelectionPos = sender.SelectionStart;
+
+        if (sender.Text.Length == 0)
+        {
+            return;
+        }
+
+        if (!Regex.IsMatch(sender.Text[sender.SelectionStart - 1].ToString(), "[a-z]|,|\\s")
+            || Regex.IsMatch(sender.Text, "[a-z]{2,}")
+            || Regex.IsMatch(sender.Text, "[a-z]\\s")
+            || _alphabet.Contains(sender.Text[sender.SelectionStart - 1].ToString()))
         {
             sender.Text = sender.Text.Remove(sender.SelectionStart - 1, 1);
             sender.SelectionStart = prevSelectionPos - 1;
