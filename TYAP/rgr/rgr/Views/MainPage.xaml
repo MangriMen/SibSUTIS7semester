@@ -11,11 +11,13 @@
         Margin="0,0,0,45"
         RowSpacing="32">
         <Grid.RowDefinitions>
-            <RowDefinition Height="auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Grid.ColumnDefinitions />
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
 
         <Grid
             Grid.Row="0"
@@ -57,33 +59,40 @@
                     Grid.Row="0"
                     Grid.Column="0"
                     Header="Алфавит"
-                    Text="" />
+                    Text="{x:Bind Alphabet, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <TextBox
                     Grid.Row="0"
                     Grid.Column="1"
                     Header="Кратность длин цепочек"
-                    Text="" />
+                    Text="{x:Bind ChainMultiplicity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <TextBox
                     Grid.Row="1"
                     Grid.Column="0"
                     Header="Начальная подцепочка"
-                    Text="" />
+                    Text="{x:Bind StartChain, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    TextChanging="StartOrEndChainChanging" />
                 <TextBox
                     Grid.Row="1"
                     Grid.Column="1"
                     Header="Конечная подцепочка"
-                    Text="" />
-                <Button Grid.Row="2" Grid.Column="0">Сгенерировать</Button>
+                    Text="{x:Bind EndChain, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    TextChanging="StartOrEndChainChanging" />
+                <Button
+                    Grid.Row="2"
+                    Grid.Column="0"
+                    Click="GenerateClick">
+                    Сгенерировать
+                </Button>
             </Grid>
             <ScrollViewer Grid.Row="2" Grid.Column="0">
                 <TextBox
                     x:Name="ManualInput"
                     Grid.Row="0"
                     Grid.Column="0"
-                    MaxHeight="200"
+                    Height="200"
                     AcceptsReturn="True"
                     Header="Регулярное выражение"
-                    Text="{x:Bind RawGrammar}"
+                    Text="{x:Bind RawGrammar, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                     TextChanged="ManualInput_TextChanged"
                     TextWrapping="Wrap" />
             </ScrollViewer>
@@ -119,7 +128,10 @@
                 Начать
             </Button>
         </Grid>
-        <Grid Grid.Row="1" RowSpacing="16">
+        <Grid
+            Grid.Row="0"
+            Grid.Column="1"
+            RowSpacing="16">
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto" />
                 <RowDefinition />

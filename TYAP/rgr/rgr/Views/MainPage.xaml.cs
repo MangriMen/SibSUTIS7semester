@@ -4,15 +4,23 @@ using System.Text.RegularExpressions;
 using rgr.ViewModels;
 
 using Microsoft.UI.Xaml.Controls;
+using System.Diagnostics;
+using Microsoft.UI.Xaml;
 
 namespace rgr.Views;
 
 public sealed partial class MainPage : Page, INotifyPropertyChanged
 {
+    private string _rawGrammar = "S: (S) | ()S |";
     private string RawGrammar
     {
-        get; set;
-    } = "S: (S) | ()S |";
+        get => _rawGrammar;
+        set
+        {
+            _rawGrammar = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RawGrammar)));
+        }
+    }
 
     private string _chains = "";
     private string Chains
@@ -53,6 +61,35 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
 
     private Dictionary<string, List<string>> _grammar = new();
 
+    private List<string> _alphabet = new();
+
+    public string _alphabetStr = "";
+    public string Alphabet
+    {
+        get => _alphabetStr;
+        set
+        {
+            _alphabetStr = value;
+            _alphabet = value.Replace(" ", "").Split(",").ToList().FindAll(item => item.Length == 1);
+            _alphabet.Sort();
+        }
+    }
+
+    public string StartChain
+    {
+        get; set;
+    } = "";
+
+    public string EndChain
+    {
+        get; set;
+    } = "";
+
+    public string ChainMultiplicity
+    {
+        get; set;
+    } = "1";
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public MainViewModel ViewModel
@@ -72,6 +109,9 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         {
             _grammar = ParseGrammar(RawGrammar);
             var chains = GenerateSequences(_grammar, SequenceLengthMin, SequenceLengthMax);
+
+            var chainMultiplicityInt = int.Parse(ChainMultiplicity);
+            chains = chains.FindAll(chain => (chain.Length % chainMultiplicityInt) == 0);
 
             var chainsOutput = new StringBuilder();
             foreach (var chain in chains)
@@ -221,6 +261,82 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
     private void ManualInput_TextChanged(object sender, TextChangedEventArgs e)
     {
         RawGrammar = ((TextBox)sender).Text;
+    }
+
+    private void GenerateClick(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        _grammar.Clear();
+        RawGrammar = "";
+
+        var ruleSymbols = new List<char>() { START_NON_TERMINATE_SYMBOL[0], 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'O', 'P', 'Q', 'R', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z' };
+
+        if (StartChain.Length + 1 + EndChain.Length > ruleSymbols.Count)
+        {
+            _ = new ContentDialog()
+            {
+                Title = "Ошибка",
+                Content = new TextBlock() { TextWrapping = TextWrapping.Wrap, Text = "Общая длина начальной и конечной цепочек должна быть меньше 26" },
+                CloseButtonText = "Закрыть",
+                XamlRoot = XamlRoot,
+            }.ShowAsync();
+            return;
+        }
+
+        var currentRule = 0;
+        foreach (var symbol in StartChain)
+        {
+            _grammar[ruleSymbols[currentRule].ToString()] = new() { $"{symbol}{ruleSymbols[++currentRule]}" };
+        }
+        var startChainEndRule = currentRule - 1;
+
+        _grammar[ruleSymbols[currentRule].ToString()] = new();
+        foreach (var symbol in _alphabet)
+        {
+            _grammar[ruleSymbols[currentRule].ToString()].Add($"{symbol}{ruleSymbols[currentRule]}");
+        }
+        foreach (var symbol in _alphabet)
+        {
+            _grammar[ruleSymbols[currentRule].ToString()].Add($"{symbol}{ruleSymbols[currentRule + 1]}");
+        }
+        currentRule++;
+
+        _grammar[ruleSymbols[startChainEndRule].ToString()].Add($"{StartChain[^1]}{ruleSymbols[currentRule]}");
+        foreach (var symbol in EndChain)
+        {
+            _grammar[ruleSymbols[currentRule].ToString()] = new() { $"{symbol}{ruleSymbols[++currentRule]}" };
+        }
+
+        foreach (var rule in _grammar)
+        {
+            RawGrammar += $"{rule.Key}: ";
+            foreach (var sequence in rule.Value)
+            {
+                RawGrammar += $"{sequence} | ";
+            }
+            RawGrammar = RawGrammar.Remove(RawGrammar.Length - 2, 2);
+            RawGrammar += "\n";
+        }
+        if (RawGrammar.Length >= 3)
+        {
+            RawGrammar = RawGrammar.Remove(RawGrammar.Length - 3, 3);
+        }
+    }
+
+    private void StartOrEndChainChanging(TextBox sender, TextBoxTextChangingEventArgs args)
+    {
+        var prevSelectionPos = sender.SelectionStart;
+
+        if (sender.Text.Length == 0)
+        {
+            return;
+        }
+
+        if (!_alphabet.Contains(sender.Text[sender.SelectionStart - 1].ToString()))
+        {
+            sender.Text = sender.Text.Remove(sender.SelectionStart - 1, 1);
+            sender.SelectionStart = prevSelectionPos - 1;
+            return;
+        }
     }
 }
 
