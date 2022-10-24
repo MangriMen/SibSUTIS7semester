@@ -109,7 +109,6 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         {
             _grammar = ParseGrammar(RawGrammar);
             var chains = GenerateSequences(_grammar, SequenceLengthMin, SequenceLengthMax);
-
             var chainMultiplicityInt = int.Parse(ChainMultiplicity != "" ? ChainMultiplicity : "1");
             chains = chains.FindAll(chain => (chain.Length % chainMultiplicityInt) == 0);
 
