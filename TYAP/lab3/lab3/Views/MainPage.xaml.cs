@@ -167,7 +167,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
                         HorizontalAlignment = HorizontalAlignment.Center,
                         VerticalAlignment = VerticalAlignment.Center
                     };
-                    cellContent.TextChanging += SequenceChanging;
+                    cellContent.TextChanging += SequenceChangingAsync;
                     row.Children.Add(CreateRowCell(cellContent));
                 }
                 newItems.Add(new ListViewItem()
@@ -223,8 +223,20 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         return Regex.Replace(field, @"{|}|\s+", "").Split(",").ToList();
     }
 
-    private void SequenceChanging(object sender, TextBoxTextChangingEventArgs e)
+    private async void SequenceChangingAsync(object sender, TextBoxTextChangingEventArgs e)
     {
+        async Task<bool> UserKeepsTyping()
+        {
+            var txt = ((TextBox)sender).Text;
+            await Task.Delay(500);
+            return txt != ((TextBox)sender).Text;
+        }
+
+        if (await UserKeepsTyping())
+        {
+            return;
+        }
+
         var textBox = (TextBox)sender;
 
         if (!_rules.Contains(textBox.Text))
@@ -258,10 +270,10 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
                     if (rowItemNumber != 1)
                     {
                         var childText = ((TextBox)child).Text;
-                        if (childText == "")
-                        {
-                            throw new Exception($"Rule sequenc for rule {rule} not defined");
-                        }
+                        //if (rule != _start_rule && childText == "")
+                        //{
+                        //    throw new Exception($"Rule sequenc for rule {rule} not defined");
+                        //}
                         _graph[rule].Add(childText);
                     }
                     rowItemNumber++;
@@ -281,25 +293,56 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         }
     }
 
-    private async void CheckClicked(object sender, RoutedEventArgs e)
+    private void CheckClicked(object sender, RoutedEventArgs e)
     {
         CreateGraph();
 
         Output = "";
+        var prev_rule = "";
+        var current_symbol = "";
         _current_rule = _start_rule;
-        foreach (var symbol in Chain)
+        try
         {
-            var rule = _graph[_current_rule];
-            Output += $"{_current_rule} ";
-            for (var i = 0; i < rule.Count; i++)
+            foreach (var symbol in Chain)
             {
-                if (symbol == _alphabet[i][0])
+                var rule = _graph[_current_rule];
+                Output += $"{_current_rule} ";
+                for (var i = 0; i < rule.Count; i++)
                 {
-                    _current_rule = rule[i];
-                    Output += $"─{symbol}─> ";
+                    if (symbol == _alphabet[i][0])
+                    {
+                        current_symbol = symbol.ToString();
+                        prev_rule = _current_rule;
+                        _current_rule = rule[i];
+                        Output += $"─{symbol}─> ";
+                    }
                 }
             }
         }
+        catch
+        {
+            _ = new ContentDialog()
+            {
+                Title = "Ошибка",
+                Content = new TextBlock() { Text = $"Цепочка не принадлежит ДКА. Не существует перехода из {prev_rule} по символу {current_symbol}." },
+                CloseButtonText = "Закрыть",
+                XamlRoot = XamlRoot
+            }.ShowAsync();
+            return;
+        }
+
+        if (_current_rule == "")
+        {
+            _ = new ContentDialog()
+            {
+                Title = "Ошибка",
+                Content = new TextBlock() { Text = $"Цепочка не принадлежит ДКА. Не существует перехода из {prev_rule} по символу {current_symbol}." },
+                CloseButtonText = "Закрыть",
+                XamlRoot = XamlRoot
+            }.ShowAsync();
+            return;
+        }
+
         Output += $"{_current_rule}";
 
         if (!_end_rules.Contains(_current_rule))
@@ -308,10 +351,11 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
             _ = new ContentDialog()
             {
                 Title = "Ошибка",
-                Content = new TextBlock() { Text = "Цепочка не принадлежит ДКА" },
+                Content = new TextBlock() { Text = $"Цепочка не принадлежит ДКА. {_current_rule} не является конечным состоянием." },
                 CloseButtonText = "Закрыть",
                 XamlRoot = XamlRoot
             }.ShowAsync();
+            return;
         }
     }
 }
