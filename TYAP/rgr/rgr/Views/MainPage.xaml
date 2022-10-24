@@ -61,21 +61,28 @@
                     Header="Алфавит"
                     Text="{x:Bind Alphabet, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                     TextChanging="AlphabetChanging" />
-                <TextBox
+                <NumberBox
                     Grid.Row="0"
                     Grid.Column="1"
                     Header="Кратность длин цепочек"
+                    LargeChange="10"
+                    Maximum="50"
+                    Minimum="1"
+                    SmallChange="1"
+                    SpinButtonPlacementMode="Compact"
                     Text="{x:Bind ChainMultiplicity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <TextBox
                     Grid.Row="1"
                     Grid.Column="0"
                     Header="Начальная подцепочка"
+                    MaxLength="26"
                     Text="{x:Bind StartChain, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                     TextChanging="StartOrEndChainChanging" />
                 <TextBox
                     Grid.Row="1"
                     Grid.Column="1"
                     Header="Конечная подцепочка"
+                    MaxLength="26"
                     Text="{x:Bind EndChain, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                     TextChanging="StartOrEndChainChanging" />
                 <Button
@@ -111,12 +118,16 @@
                     <NumberBox
                         Header="От"
                         LargeChange="10"
+                        Maximum="20"
+                        Minimum="0"
                         SmallChange="1"
                         SpinButtonPlacementMode="Compact"
                         Value="{x:Bind SequenceLengthMin, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                     <NumberBox
                         Header="До"
                         LargeChange="10"
+                        Maximum="20"
+                        Minimum="0"
                         SmallChange="1"
                         SpinButtonPlacementMode="Compact"
                         Text="{x:Bind SequenceLengthMax, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />

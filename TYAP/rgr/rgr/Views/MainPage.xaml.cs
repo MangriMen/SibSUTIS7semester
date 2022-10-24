@@ -110,7 +110,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
             _grammar = ParseGrammar(RawGrammar);
             var chains = GenerateSequences(_grammar, SequenceLengthMin, SequenceLengthMax);
 
-            var chainMultiplicityInt = int.Parse(ChainMultiplicity);
+            var chainMultiplicityInt = int.Parse(ChainMultiplicity != "" ? ChainMultiplicity : "1");
             chains = chains.FindAll(chain => (chain.Length % chainMultiplicityInt) == 0);
 
             var chainsOutput = new StringBuilder();
@@ -377,6 +377,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         if (!Regex.IsMatch(sender.Text[sender.SelectionStart - 1].ToString(), "[a-z]|,|\\s")
             || Regex.IsMatch(sender.Text, "[a-z]{2,}")
             || Regex.IsMatch(sender.Text, "[a-z]\\s")
+            || Regex.IsMatch(sender.Text, ",,|,\\s+,|\\s{2,}")
             || _alphabet.Contains(sender.Text[sender.SelectionStart - 1].ToString()))
         {
             sender.Text = sender.Text.Remove(sender.SelectionStart - 1, 1);
