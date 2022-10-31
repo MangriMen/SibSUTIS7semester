@@ -19,6 +19,7 @@
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
@@ -63,12 +64,13 @@
         <Button Grid.Row="4" Click="CheckClicked">Проверить</Button>
         <Grid
             Grid.Row="1"
-            Grid.RowSpan="4"
+            Grid.RowSpan="8"
             Grid.Column="1"
+            Padding="0,0,0,64"
             RowSpacing="8">
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto" />
-                <RowDefinition Height="auto" />
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0" Text="Результат" />

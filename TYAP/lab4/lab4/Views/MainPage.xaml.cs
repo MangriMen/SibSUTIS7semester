@@ -475,6 +475,8 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         CreateGraph();
 
         Output = "";
+        stack.Clear();
+        stack.Push(_start_stack_symbol[0]);
         _current_rule = _start_rule;
         var prev_rule = "";
         var current_symbol = "";

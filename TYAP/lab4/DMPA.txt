@@ -1,7 +1,14 @@
-{q0, q1, qf}, {0, 1}, {Z, 0, 1}, q0, Z, {qf}
-q0,0,Z,q0,0Z
-q0,0,0,q0,00
-q0,1,0,q1,!
-q1,1,0,q1,!
-q1,^,0,q1,!
-q1,^,Z,qf,@
+{q0, q1, qf}, {a, b}, {Z, a, b}, q0, Z, {qf}
+q0,^,Z,qf,@
+q0,a,Z,q1,aZ
+q0,a,a,q1,aa
+q0,a,b,q0,!
+q1,a,a,q0,aa
+q1,b,b,q0,bb
+q1,b,a,q1,!
+q1,a,b,q1,!
+q1,a,Z,q0,aZ
+q1,b,Z,q0,bZ
+q0,b,Z,q1,bZ
+q0,b,b,q1,bb
+q0,b,a,q0,!
