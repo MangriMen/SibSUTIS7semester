@@ -281,8 +281,18 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
             return;
         }
 
-        var currentRule = 0;
+        var startChainCompareIndex = - 1;
+        for (var i = EndChain.Length; i >= 0; i--)
+        {
+            var test = EndChain[..i];
+            if (StartChain.EndsWith(EndChain[..i]))
+            {
+                startChainCompareIndex = i;
+                break;
+            }
+        }
 
+        var currentRule = 0;
         if (StartChain.Length > 0)
         {
             foreach (var symbol in StartChain)
@@ -290,6 +300,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
                 _grammar[ruleSymbols[currentRule].ToString()] = new() { $"{symbol}{ruleSymbols[++currentRule]}" };
             }
         }
+
         var startChainEndRule = currentRule - 1;
 
         _grammar[ruleSymbols[currentRule].ToString()] = new();
@@ -307,6 +318,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         }
         else
         {
+            _grammar[ruleSymbols[startChainEndRule].ToString()].Add($"{StartChain[^1]}");
             foreach (var symbol in _alphabet)
             {
                 _grammar[ruleSymbols[currentRule].ToString()].Add($"{symbol}");
@@ -316,14 +328,29 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
 
         if (StartChain.Length > 0)
         {
-            _grammar[ruleSymbols[startChainEndRule].ToString()].Add($"{StartChain[^1]}{ruleSymbols[currentRule]}");
+            if (EndChain.Length > 0)
+            {
+                _grammar[ruleSymbols[startChainEndRule].ToString()].Add($"{StartChain[^1]}{ruleSymbols[currentRule]}");
+            }
+        }
+        else
+        {
+            _grammar[ruleSymbols[0].ToString()].Add($"{EndChain[0]}{(EndChain.Length > 1 ? ruleSymbols[currentRule + 1] : "")}");
         }
 
         if (EndChain.Length > 0)
         {
-            foreach (var symbol in EndChain)
+            for (var i = 0; i < EndChain.Length; i++)
             {
+                var symbol = EndChain[i];
                 _grammar[ruleSymbols[currentRule].ToString()] = new() { $"{symbol}{ruleSymbols[++currentRule]}" };
+                if (i < startChainCompareIndex)
+                {
+                    var startChainIndex = StartChain.Length - startChainCompareIndex + i;
+                    if (i != EndChain.Length - 1) {
+                        _grammar[ruleSymbols[startChainIndex].ToString()].Add($"{symbol}{ruleSymbols[currentRule]}");
+                    }
+                }
             }
         }
 
