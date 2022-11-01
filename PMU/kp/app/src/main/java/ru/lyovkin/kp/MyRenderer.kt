@@ -1,49 +1,88 @@
 package ru.lyovkin.kp
 
 import android.content.Context
-import android.graphics.BitmapFactory
-import android.opengl.GLES20
+import android.opengl.GLES20.*
 import android.opengl.GLSurfaceView
-import android.opengl.GLUtils
-import ru.lyovkin.kp.figures.Sphere
+import ru.lyovkin.kp.figures.Object
+import ru.lyovkin.kp.gl.GLObject
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 
-class MyRenderer(ctx: Context): GLSurfaceView.Renderer {
+class MyRenderer(ctx: Context) : GLSurfaceView.Renderer {
     private val objects: MutableList<GLObject> = mutableListOf()
-    private val bgColorR: Float = 1.0f
+    private val bgColorR: Float = 0.8f
     private val bgColorG: Float = 1.0f
-    private val bgColorB: Float = 0.0f
+    private val bgColorB: Float = 0.1f
     private val bgColorA: Float = 1.0f
 
-    companion object {
-        fun loadTextures(ctx:Context, gl: GL10, textures: IntArray, texturesSize: IntArray) {
-            gl.glGenTextures(1, texturesSize, 0)
-            for (i in textures.indices) {
-                gl.glBindTexture(GL10.GL_TEXTURE_2D, texturesSize[i])
-                gl.glTexParameterf(
-                    GL10.GL_TEXTURE_2D,
-                    GL10.GL_TEXTURE_MIN_FILTER,
-                    GL10.GL_LINEAR.toFloat()
-                )
-
-                val inputStream = ctx.resources.openRawResource(textures[i])
-                val bitmap = BitmapFactory.decodeStream(inputStream)
-                GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0)
-                bitmap.recycle()
-            }
-        }
-    }
-
     init {
-        objects.add(Sphere(ctx))
+        val table = Object.fromInputStream(ctx.resources.openRawResource(R.raw.table))
+        table.z = -10f
+        table.y = -1.5f
+        table.scaleX = 0.02f
+        table.scaleY = 0.02f
+        table.scaleZ = 0.02f
+
+        val glass = Object.fromInputStream(ctx.resources.openRawResource(R.raw.glass))
+        glass.y = -0.5f
+        glass.z = -10f
+        glass.scaleX = 0.1f
+        glass.scaleY = 0.1f
+        glass.scaleZ = 0.1f
+        glass.setColor(1f, 1f, 1f, 0.2f)
+
+        val apple = Object.fromInputStream(ctx.resources.openRawResource(R.raw.apple))
+        apple.x = 0.7f
+        apple.y = -0.4f
+        apple.z = -10f
+        apple.scaleX = 0.5f
+        apple.scaleY = 0.5f
+        apple.scaleZ = 0.5f
+        apple.setColor(1f, 0f, 0f)
+
+        val pear = Object.fromInputStream(ctx.resources.openRawResource(R.raw.pear))
+        pear.x = 1.2f
+        pear.y = -0.1f
+        pear.z = -10f
+        pear.scaleX = 0.05f
+        pear.scaleY = 0.05f
+        pear.scaleZ = 0.05f
+        pear.rotateX = -45f
+        pear.setColor(0.5f, 1f, 0.8f)
+
+        val banana = Object.fromInputStream(ctx.resources.openRawResource(R.raw.banana))
+        banana.x = -0.7f
+        banana.y = -0.4f
+        banana.z = -10f
+        banana.scaleX = 0.05f
+        banana.scaleY = 0.05f
+        banana.scaleZ = 0.05f
+        banana.setColor(0f, 1f, 0f)
+
+        val pineapple = Object.fromInputStream(ctx.resources.openRawResource(R.raw.pineapple))
+        pineapple.x = -1.2f
+        pineapple.y = -0.3f
+        pineapple.z = -10f
+        pineapple.scaleX = 0.04f
+        pineapple.scaleY = 0.04f
+        pineapple.scaleZ = 0.04f
+        pineapple.setColor(0.7f, 0.8f, 0f)
+
+        objects.add(glass)
+        objects.add(apple)
+        objects.add(pear)
+        objects.add(banana)
+        objects.add(pineapple)
+        objects.add(table)
     }
 
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig) {
-        GLES20.glClearColor(bgColorR, bgColorG, bgColorB, bgColorA)
-        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
-        GLES20.glDepthFunc(GLES20.GL_LEQUAL);
+        glEnable(GL_DEPTH_TEST)
+        glDepthFunc(GL_LEQUAL)
+
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         for (obj in objects) {
             obj.onSurfaceCreated(gl, config)
@@ -51,7 +90,7 @@ class MyRenderer(ctx: Context): GLSurfaceView.Renderer {
     }
 
     override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
-        GLES20.glViewport(0, 0, width, height);
+        glViewport(0, 0, width, height)
 
         for (obj in objects) {
             obj.onSurfaceChanged(gl, width, height)
@@ -59,10 +98,11 @@ class MyRenderer(ctx: Context): GLSurfaceView.Renderer {
     }
 
     override fun onDrawFrame(gl: GL10) {
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
-        GLES20.glClearColor(bgColorR, bgColorG, bgColorB, bgColorA)
+//        glClearColor(bgColorR, bgColorG, bgColorB, bgColorA)
+        glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
 
         for (obj in objects) {
+            (obj as Object).rotateY += 1f
             obj.onDrawFrame(gl)
         }
     }
