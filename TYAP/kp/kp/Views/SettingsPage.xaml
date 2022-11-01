@@ -74,6 +74,12 @@
                     <TextBlock x:Uid="Settings_TaskTheme" Style="{ThemeResource BodyTextBlockStyle}" />
                     <TextBlock x:Uid="Settings_AboutDescription" Style="{ThemeResource BodyTextBlockStyle}" />
                 </StackPanel>
+
+                <StackPanel Margin="{StaticResource XSmallTopMargin}">
+                    <TextBlock x:Uid="Settings_Restrictions" Style="{ThemeResource BodyTextBlockStyle}" />
+                    <TextBlock x:Uid="Settings_RestrictionsDescription" Style="{ThemeResource BodyTextBlockStyle}" />
+                </StackPanel>
+
                 <HyperlinkButton x:Uid="SettingsPage_PrivacyTermsLink" Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
             </StackPanel>
         </StackPanel>

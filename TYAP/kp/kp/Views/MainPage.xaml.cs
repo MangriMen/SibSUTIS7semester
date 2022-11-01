@@ -2,15 +2,29 @@
 using System.Text.RegularExpressions;
 using System.Text;
 using kp.ViewModels;
-
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml;
+using Windows.Storage.Pickers;
+using System.Runtime.InteropServices;
+using WinRT;
 
 namespace kp.Views;
 
 public sealed partial class MainPage : Page, INotifyPropertyChanged
 {
-    private string _rawGrammar = "S: (S) | ()S |";
+    private const char RULE_SEPARATOR = ':';
+    private const char SEQUENCE_SEPARATOR = '|';
+    private const string START_NON_TERMINATE_SYMBOL = "S";
+    private const int MAX_RECURSION = 10000;
+
+    private readonly List<char> ruleSymbols = new() {
+        START_NON_TERMINATE_SYMBOL[0],
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+        'I', 'J', 'K', 'L', 'M', 'O', 'P', 'Q',
+        'R', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+    };
+
+    private string _rawGrammar = "";
     private string RawGrammar
     {
         get => _rawGrammar;
@@ -20,6 +34,10 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RawGrammar)));
         }
     }
+    public static string Grammar
+    {
+        get; private set;
+    } = "";
 
     private string _chains = "";
     private string Chains
@@ -31,9 +49,6 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Chains)));
         }
     }
-
-    private const string START_NON_TERMINATE_SYMBOL = "S";
-    private const int MAX_RECURSION = 10000;
 
     private int _sequenceLengthMin = 0;
     private int _sequenceLengthMax = 2;
@@ -47,7 +62,6 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SequenceLengthMin)));
         }
     }
-
     private int SequenceLengthMax
     {
         get => _sequenceLengthMax;
@@ -61,7 +75,6 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
     private Dictionary<string, List<string>> _grammar = new();
 
     private List<string> _alphabet = new();
-
     public string _alphabetStr = "";
     public string Alphabet
     {
@@ -74,20 +87,22 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         }
     }
 
-    public string StartChain
+    public string SubChain
     {
         get; set;
     } = "";
 
-    public string EndChain
-    {
-        get; set;
-    } = "";
-
+    private int _chainMultiplicity = 1;
     public string ChainMultiplicity
     {
+        get => _chainMultiplicity.ToString();
+        set => _chainMultiplicity = int.Parse(value != string.Empty ? value : "1");
+    }
+
+    public int SelectedDirectionIndex
+    {
         get; set;
-    } = "1";
+    } = 1;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -102,25 +117,43 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         InitializeComponent();
     }
 
-    private void StartClick(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    public static Dictionary<string, List<string>> ParseGrammar(string rawGrammar)
+    {
+        var parsedGrammar = new Dictionary<string, List<string>>();
+
+        var rules = rawGrammar.Replace(" ", "").Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+        try
+        {
+            foreach (var line in rules)
+            {
+                var tokens = line.Split(RULE_SEPARATOR);
+                var rule = tokens[0];
+                var sequences = tokens[1].Split(SEQUENCE_SEPARATOR);
+
+                parsedGrammar.TryAdd(rule, new());
+                parsedGrammar[rule].AddRange(sequences);
+            }
+        }
+        catch (IndexOutOfRangeException)
+        {
+            throw new GrammarException("Failed to parse");
+        }
+
+        return parsedGrammar;
+    }
+
+    private void StartClick(object sender, RoutedEventArgs e)
     {
         try
         {
             _grammar = ParseGrammar(RawGrammar);
-            var chains = GenerateSequences(_grammar, SequenceLengthMin, SequenceLengthMax);
-            var chainMultiplicityInt = int.Parse(ChainMultiplicity != "" ? ChainMultiplicity : "1");
-            chains = chains.FindAll(chain => (chain.Length % chainMultiplicityInt) == 0);
 
-            var chainsOutput = new StringBuilder();
-            foreach (var chain in chains)
-            {
-                if (chain.Length >= SequenceLengthMin && chain.Length <= SequenceLengthMax)
-                {
-                    chainsOutput.AppendLine(chain);
-                }
-            }
+            var chains = GenerateSequences(_grammar, SequenceLengthMin, SequenceLengthMax)
+                .FindAll(chain => (chain.Length % _chainMultiplicity) == 0);
 
-            Chains = chainsOutput.ToString();
+            var chainsOutput = chains.Where(chain => chain.Length >= SequenceLengthMin && chain.Length <= SequenceLengthMax);
+
+            Chains = string.Join('\n', chainsOutput);
         }
         catch (GrammarException)
         {
@@ -132,34 +165,6 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
                 XamlRoot = XamlRoot
             }.ShowAsync();
         }
-    }
-
-    public static Dictionary<string, List<string>> ParseGrammar(string rawGrammar)
-    {
-        var lines = rawGrammar.Replace(" ", "").Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-        var newGrammar = new Dictionary<string, List<string>>();
-
-        try
-        {
-            foreach (var line in lines)
-            {
-                var tokens = line.Split(':');
-                var rule = tokens[0];
-                var variants = tokens[1].Split('|');
-
-                newGrammar.TryAdd(rule, new());
-                foreach (var variant in variants)
-                {
-                    newGrammar[rule].Add(variant);
-                }
-            }
-        }
-        catch (IndexOutOfRangeException)
-        {
-            throw new GrammarException("Failed to parse");
-        }
-
-        return newGrammar;
     }
 
     public static List<string> GenerateSequences(Dictionary<string, List<string>> grammar, int sequenceLengthMin, int sequenceLengthMax)
@@ -256,24 +261,29 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         return (non_term_sym > 0) ? -2 : 0;
     }
 
-    private void ManualInput_TextChanged(object sender, TextChangedEventArgs e)
+    private static string BuildSequence(int direction, string symbol, char rule)
     {
-        RawGrammar = ((TextBox)sender).Text;
+        if (direction == 0)
+        {
+            return $"{rule}{symbol}";
+        }
+        else
+        {
+            return $"{symbol}{rule}";
+        }
     }
 
-    private void GenerateClick(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    private void GenerateClick(object sender, RoutedEventArgs e)
     {
         _grammar.Clear();
-        if (Alphabet.Length == 0 || Alphabet[0] == ',')
+        if (Alphabet.Length == 0)
         {
             return;
         }
 
         RawGrammar = "";
 
-        var ruleSymbols = new List<char>() { START_NON_TERMINATE_SYMBOL[0], 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'O', 'P', 'Q', 'R', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z' };
-
-        if (StartChain.Length + 1 + EndChain.Length > ruleSymbols.Count)
+        if (SubChain.Length + 2 > ruleSymbols.Count)
         {
             _ = new ContentDialog()
             {
@@ -285,79 +295,60 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
             return;
         }
 
-        var startChainCompareIndex = -1;
-        for (var i = EndChain.Length; i >= 0; i--)
-        {
-            if (StartChain.EndsWith(EndChain[..i]))
-            {
-                startChainCompareIndex = i;
-                break;
-            }
-        }
-
         var currentRule = 0;
-        if (StartChain.Length > 0)
-        {
-            foreach (var symbol in StartChain)
-            {
-                _grammar[ruleSymbols[currentRule].ToString()] = new() { $"{symbol}{ruleSymbols[++currentRule]}" };
-            }
-        }
 
-        var startChainEndRule = currentRule - 1;
-
+        /* Chain begin rules */
         _grammar[ruleSymbols[currentRule].ToString()] = new();
         foreach (var symbol in _alphabet)
         {
-            _grammar[ruleSymbols[currentRule].ToString()].Add($"{symbol}{ruleSymbols[currentRule]}");
+            _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, symbol, ruleSymbols[currentRule]));
         }
 
-        if (EndChain.Length > 0)
+        if (SubChain.Length == 0)
         {
-            foreach (var symbol in _alphabet)
-            {
-                _grammar[ruleSymbols[currentRule].ToString()].Add($"{symbol}{ruleSymbols[currentRule + 1]}");
-            }
-        }
-        else
-        {
-            _grammar[ruleSymbols[startChainEndRule].ToString()].Add($"{StartChain[^1]}");
             foreach (var symbol in _alphabet)
             {
                 _grammar[ruleSymbols[currentRule].ToString()].Add($"{symbol}");
             }
         }
-        currentRule++;
-
-        if (StartChain.Length > 0)
-        {
-            if (EndChain.Length > 0)
-            {
-                _grammar[ruleSymbols[startChainEndRule].ToString()].Add($"{StartChain[^1]}{ruleSymbols[currentRule]}");
-            }
-        }
         else
         {
-            _grammar[ruleSymbols[0].ToString()].Add($"{EndChain[0]}{(EndChain.Length > 1 ? ruleSymbols[currentRule + 1] : "")}");
-        }
-
-        if (EndChain.Length > 0)
-        {
-            for (var i = 0; i < EndChain.Length; i++)
+            /* Jump to sub-chain rules */
+            foreach (var symbol in _alphabet)
             {
-                var symbol = EndChain[i];
-                _grammar[ruleSymbols[currentRule].ToString()] = new() { $"{symbol}{ruleSymbols[++currentRule]}" };
-                if (i < startChainCompareIndex)
-                {
-                    var startChainIndex = StartChain.Length - startChainCompareIndex + i;
-                    if (i != EndChain.Length - 1)
-                    {
-                        _grammar[ruleSymbols[startChainIndex].ToString()].Add($"{symbol}{ruleSymbols[currentRule]}");
-                    }
-                }
+                _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, symbol, ruleSymbols[currentRule + 1]));
+            }
+            currentRule++;
+
+            /* Obligatory sub-chain rules */
+            foreach (var symbol in SubChain)
+            {
+                _grammar[ruleSymbols[currentRule].ToString()] = new()
+            {
+                $"{symbol}{ruleSymbols[++currentRule]}"
+            };
+            }
+
+            /* Sequences for only sub-chain chain */
+            if (SubChain.Length > 0)
+            {
+                _grammar[ruleSymbols[0].ToString()].Add(BuildSequence(SelectedDirectionIndex, SubChain[0].ToString(), ruleSymbols[2]));
+                _grammar[ruleSymbols[currentRule - 1].ToString()].Add($"{SubChain[^1]}");
+            }
+
+            /* Chain end rules */
+            _grammar[ruleSymbols[currentRule].ToString()] = new();
+            foreach (var symbol in _alphabet)
+            {
+                _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, symbol, ruleSymbols[currentRule]));
+            }
+            foreach (var symbol in _alphabet)
+            {
+                _grammar[ruleSymbols[currentRule].ToString()].Add($"{symbol}");
             }
         }
 
+        /* Build grammar */
         foreach (var rule in _grammar)
         {
             RawGrammar += $"{rule.Key}: ";
@@ -365,20 +356,31 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
             {
                 RawGrammar += $"{sequence} | ";
             }
-            RawGrammar = RawGrammar.Remove(RawGrammar.Length - 2, 2);
-            RawGrammar += "\n";
+            RawGrammar = $"{RawGrammar[0..^3]}\n";
         }
-        if (RawGrammar.Length >= 3 && EndChain.Length > 0)
+        RawGrammar = RawGrammar[0..^1];
+        Grammar = RawGrammar;
+    }
+    private void AlphabetChanging(TextBox sender, TextBoxTextChangingEventArgs args)
+    {
+        var prevSelectionPos = sender.SelectionStart;
+
+        if (sender.Text.Length == 0)
         {
-            RawGrammar = RawGrammar.Remove(RawGrammar.Length - 3, 3);
+            return;
         }
-        else if (RawGrammar.Length >= 2)
+
+        if (!Regex.IsMatch(sender.Text[sender.SelectionStart - 1].ToString(), @"[a-z]|,|\s")
+            || Regex.IsMatch(sender.Text, @"[a-z]{2,}|[a-z]\s|^,+|^\s+|,,|,\s+,|\s{2,}")
+            || _alphabet.Contains(sender.Text[sender.SelectionStart - 1].ToString()))
         {
-            RawGrammar = RawGrammar.Remove(RawGrammar.Length - 2, 2);
+            sender.Text = sender.Text.Remove(sender.SelectionStart - 1, 1);
+            sender.SelectionStart = prevSelectionPos - 1;
+            return;
         }
     }
 
-    private void StartOrEndChainChanging(TextBox sender, TextBoxTextChangingEventArgs args)
+    private void SubChainChanging(TextBox sender, TextBoxTextChangingEventArgs args)
     {
         var prevSelectionPos = sender.SelectionStart;
 
@@ -395,25 +397,39 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         }
     }
 
-    private void AlphabetChanging(TextBox sender, TextBoxTextChangingEventArgs args)
+    [ComImport]
+    [Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public interface IInitializeWithWindow
     {
-        var prevSelectionPos = sender.SelectionStart;
-
-        if (sender.Text.Length == 0)
+        void Initialize(IntPtr hwnd);
+    }
+    [ComImport]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("EECDBF0E-BAE9-4CB6-A68E-9598E1CB57BB")]
+    internal interface IWindowNative
+    {
+        IntPtr WindowHandle
         {
-            return;
+            get;
         }
+    }
 
-        if (!Regex.IsMatch(sender.Text[sender.SelectionStart - 1].ToString(), "[a-z]|,|\\s")
-            || Regex.IsMatch(sender.Text, "[a-z]{2,}")
-            || Regex.IsMatch(sender.Text, "[a-z]\\s")
-            || Regex.IsMatch(sender.Text, ",,|,\\s+,|\\s{2,}")
-            || _alphabet.Contains(sender.Text[sender.SelectionStart - 1].ToString()))
-        {
-            sender.Text = sender.Text.Remove(sender.SelectionStart - 1, 1);
-            sender.SelectionStart = prevSelectionPos - 1;
-            return;
-        }
+    public static async void SaveGrammarToFile()
+    {
+        var savePicker = new FileSavePicker();
+
+        var hwnd = App.MainWindow.As<IWindowNative>().WindowHandle;
+
+        var initializeWithWindow = savePicker.As<IInitializeWithWindow>();
+        initializeWithWindow.Initialize(hwnd);
+
+        savePicker.FileTypeChoices.Add("Plain Text", new List<string>() { ".txt" });
+        savePicker.SuggestedFileName = "OutputGrammar";
+
+        var path = await savePicker.PickSaveFileAsync();
+
+        await File.WriteAllTextAsync(path.Path, Grammar);
     }
 }
 

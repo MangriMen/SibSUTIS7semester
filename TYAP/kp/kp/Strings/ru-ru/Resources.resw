@@ -124,38 +124,38 @@
     <value>kp</value>
   </data>
   <data name="ShellMenuBarItem_File.Title" xml:space="preserve">
-    <value>File</value>
+    <value>Файл</value>
   </data>
   <data name="ShellMenuBarItem_Views.Title" xml:space="preserve">
-    <value>Views</value>
+    <value>Страницы</value>
   </data>
   <data name="ShellMenuItem_File_Exit.Text" xml:space="preserve">
-    <value>Exit</value>
+    <value>Выход</value>
   </data>
   <data name="ShellMenuItem_Views_Main.Text" xml:space="preserve">
-    <value>Main</value>
+    <value>Главная</value>
   </data>
   <data name="Main_Title.Text" xml:space="preserve">
-    <value>Main</value>
+    <value>Главная</value>
     <comment>Page title for MainPage</comment>
   </data>
   <data name="Settings_Personalization.Text" xml:space="preserve">
-    <value>Personalization</value>
+    <value>Персонализация</value>
   </data>
   <data name="Settings_Theme.Text" xml:space="preserve">
-    <value>Theme</value>
+    <value>Тема</value>
   </data>
   <data name="Settings_Theme_Light.Content" xml:space="preserve">
-    <value>Light</value>
+    <value>Светлая</value>
   </data>
   <data name="Settings_Theme_Dark.Content" xml:space="preserve">
-    <value>Dark</value>
+    <value>Тёмная</value>
   </data>
   <data name="Settings_Theme_Default.Content" xml:space="preserve">
-    <value>Default</value>
+    <value>Системная</value>
   </data>
   <data name="Settings_About.Text" xml:space="preserve">
-    <value>About this application</value>
+    <value>О программе</value>
   </data>
   <data name="Settings_AboutDescription.Text" xml:space="preserve">
     <value>Написать программу, которая по предложенному описанию языка построит регулярную грамматику (ЛЛ или ПЛ – по заказу пользователя),
@@ -164,73 +164,73 @@
 всех цепочек языка.</value>
   </data>
   <data name="SettingsPage_PrivacyTermsLink.Content" xml:space="preserve">
-    <value>Privacy Statement</value>
+    <value>Заявление о конфиденциальности</value>
   </data>
   <data name="SettingsPage_PrivacyTermsLink.NavigateUri" xml:space="preserve">
     <value>https://YourPrivacyUrlGoesHere/</value>
   </data>
   <data name="ShellMenuBarSettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Settings</value>
+    <value>Настройки</value>
   </data>
   <data name="Settings_Title.Text" xml:space="preserve">
-    <value>Settings</value>
+    <value>Настройки</value>
     <comment>Page title for SettingsPage</comment>
   </data>
   <data name="Settings_AuthorName.Text" xml:space="preserve">
     <value>Лёвкин И. А. ИП-912</value>
   </data>
   <data name="Settings_Author.Text" xml:space="preserve">
-    <value>Author</value>
+    <value>Автор</value>
   </data>
   <data name="Settings_TaskTheme.Text" xml:space="preserve">
-    <value>Theme:</value>
+    <value>Тема:</value>
   </data>
   <data name="AlphabetTextBox.Header" xml:space="preserve">
-    <value>Alphabet</value>
+    <value>Алфавит</value>
   </data>
   <data name="ChainLengthTextBlock.Text" xml:space="preserve">
-    <value>Chain length:</value>
+    <value>Длина цепочек:</value>
   </data>
   <data name="ChainMultiplicityNumberBox.Header" xml:space="preserve">
-    <value>Chain multiplicity</value>
+    <value>Кратность длин цепочек</value>
   </data>
   <data name="ChainsTextBlock.Text" xml:space="preserve">
-    <value>Chains</value>
+    <value>Цепочки</value>
   </data>
   <data name="FromNumberBox.Header" xml:space="preserve">
-    <value>From</value>
+    <value>От</value>
   </data>
   <data name="GenerateButton.Content" xml:space="preserve">
-    <value>Generate</value>
+    <value>Сгенерировать</value>
   </data>
   <data name="InputDataTextBlock.Text" xml:space="preserve">
-    <value>Input data</value>
+    <value>Входные данные</value>
   </data>
   <data name="RegularGrammarTextBox.Header" xml:space="preserve">
-    <value>Regular grammar</value>
+    <value>Регулярная грамматика</value>
   </data>
   <data name="ShellMenuItem_File_Save.Text" xml:space="preserve">
-    <value>Save</value>
+    <value>Сохранить</value>
   </data>
   <data name="StartButton.Content" xml:space="preserve">
-    <value>Start</value>
+    <value>Начать</value>
   </data>
   <data name="SubChainTextBox.Header" xml:space="preserve">
-    <value>Sub-chain</value>
+    <value>Подцепочка</value>
   </data>
   <data name="ToNumberBox.Header" xml:space="preserve">
-    <value>To</value>
+    <value>До</value>
   </data>
   <data name="Settings_Restrictions.Text" xml:space="preserve">
-    <value>Restrictions:</value>
+    <value>Ограничения:</value>
   </data>
   <data name="Settings_RestrictionsDescription.Text" xml:space="preserve">
-    <value>The number of characters in a substring is limited to 24 characters, because Latin letters are used as rules. Out of 26 letters - 2 letters for the initial and final rules, 24 remain for the substring.</value>
+    <value>Количество символов в подцепочке ограничено 24 символами, т.к. в качестве правил иcпользуются буквы латинского алфавита. Из 26 букв - 2 буквы на начальное и конечное правила, 24 остаётся на подцепочку.</value>
   </data>
   <data name="AlphabetTextBox.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Comma separated alphabet symbols</value>
+    <value>Символы алфавита, разделённые запятыми</value>
   </data>
   <data name="SubChainTextBox.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Only alphabet characters are allowed. Maximum 24 characters</value>
+    <value>Допустимы только символы алфавита. Максимум 24 символа</value>
   </data>
 </root>

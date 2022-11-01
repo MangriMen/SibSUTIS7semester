@@ -37,7 +37,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto" />
                     <RowDefinition Height="auto" />
-                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="*" />
                     <RowDefinition Height="auto" />
                     <RowDefinition Height="auto" />
                 </Grid.RowDefinitions>
@@ -48,9 +48,9 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock
+                    x:Uid="InputDataTextBlock"
                     Grid.Row="0"
-                    Grid.Column="0"
-                    Text="Входные данные" />
+                    Grid.Column="0" />
                 <Grid
                     Grid.Row="1"
                     Grid.Column="0"
@@ -59,60 +59,101 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="auto" />
                         <RowDefinition Height="auto" />
-                        <RowDefinition Height="auto" />
                     </Grid.RowDefinitions>
 
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="auto" />
                     </Grid.ColumnDefinitions>
+
                     <TextBox
+                        x:Uid="AlphabetTextBox"
                         Grid.Row="0"
                         Grid.Column="0"
-                        Header="Алфавит"
                         Text="{x:Bind Alphabet, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                         TextChanging="AlphabetChanging" />
-                    <NumberBox
+                    <TextBox
+                        x:Uid="SubChainTextBox"
                         Grid.Row="0"
                         Grid.Column="1"
-                        Header="Кратность длин цепочек"
+                        MaxLength="26"
+                        Text="{x:Bind SubChain, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        TextChanging="SubChainChanging" />
+                    <NumberBox
+                        x:Uid="ChainMultiplicityNumberBox"
+                        Grid.Row="0"
+                        Grid.Column="2"
                         LargeChange="10"
                         Maximum="50"
                         Minimum="1"
                         SmallChange="1"
                         SpinButtonPlacementMode="Compact"
                         Text="{x:Bind ChainMultiplicity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                    <TextBox
-                        Grid.Row="1"
-                        Grid.Column="0"
-                        Header="Начальная подцепочка"
-                        MaxLength="26"
-                        Text="{x:Bind StartChain, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        TextChanging="StartOrEndChainChanging" />
-                    <TextBox
+                    <RadioButtons
                         Grid.Row="1"
                         Grid.Column="1"
-                        Header="Конечная подцепочка"
-                        MaxLength="26"
-                        Text="{x:Bind EndChain, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        TextChanging="StartOrEndChainChanging" />
+                        SelectedIndex="{x:Bind SelectedDirectionIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <RadioButtons.Style>
+                            <Style TargetType="RadioButtons">
+                                <Setter Property="IsTabStop" Value="False" />
+                                <Setter Property="TabNavigation" Value="Once" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="RadioButtons">
+                                            <StackPanel Margin="20,0,0,6">
+                                                <ContentPresenter
+                                                    x:Name="HeaderContentPresenter"
+                                                    Margin="{ThemeResource RadioButtonsTopHeaderMargin}"
+                                                    Content="{TemplateBinding Header}"
+                                                    ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                                    Foreground="{ThemeResource RadioButtonsHeaderForeground}" />
+                                                <ItemsRepeater x:Name="InnerRepeater">
+                                                    <ItemsRepeater.Layout>
+                                                        <StackLayout Orientation="Horizontal" Spacing="-60" />
+                                                    </ItemsRepeater.Layout>
+                                                </ItemsRepeater>
+
+                                                <VisualStateManager.VisualStateGroups>
+                                                    <VisualStateGroup x:Name="CommonStates">
+                                                        <VisualState x:Name="Normal" />
+
+                                                        <VisualState x:Name="Disabled">
+                                                            <VisualState.Setters>
+                                                                <Setter Target="HeaderContentPresenter.Foreground" Value="{ThemeResource RadioButtonsHeaderForegroundDisabled}" />
+
+                                                            </VisualState.Setters>
+                                                        </VisualState>
+
+                                                    </VisualStateGroup>
+
+                                                </VisualStateManager.VisualStateGroups>
+                                            </StackPanel>
+
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </RadioButtons.Style>
+
+                        <RadioButton Content="ЛЛ" />
+                        <RadioButton Content="ПЛ" />
+                    </RadioButtons>
                     <Button
-                        Grid.Row="2"
+                        x:Uid="GenerateButton"
+                        Grid.Row="1"
                         Grid.Column="0"
-                        Click="GenerateClick">
-                        Сгенерировать
-                    </Button>
+                        Click="GenerateClick" />
                 </Grid>
                 <ScrollViewer Grid.Row="2" Grid.Column="0">
                     <TextBox
-                        x:Name="ManualInput"
+                        x:Uid="RegularGrammarTextBox"
                         Grid.Row="0"
                         Grid.Column="0"
-                        Height="180"
+                        MinHeight="180"
+                        VerticalAlignment="Stretch"
                         AcceptsReturn="True"
-                        Header="Регулярное выражение"
                         Text="{x:Bind RawGrammar, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        TextChanged="ManualInput_TextChanged"
                         TextWrapping="Wrap" />
                 </ScrollViewer>
                 <StackPanel
@@ -122,12 +163,12 @@
                     Orientation="Horizontal"
                     Spacing="16">
                     <TextBlock
+                        x:Uid="ChainLengthTextBlock"
                         Margin="0,24,0,0"
-                        VerticalAlignment="Center"
-                        Text="Длина цепочки:" />
+                        VerticalAlignment="Center" />
                     <StackPanel Orientation="Horizontal" Spacing="16">
                         <NumberBox
-                            Header="От"
+                            x:Uid="FromNumberBox"
                             LargeChange="10"
                             Maximum="20"
                             Minimum="0"
@@ -135,7 +176,7 @@
                             SpinButtonPlacementMode="Compact"
                             Value="{x:Bind SequenceLengthMin, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         <NumberBox
-                            Header="До"
+                            x:Uid="ToNumberBox"
                             LargeChange="10"
                             Maximum="20"
                             Minimum="0"
@@ -145,11 +186,10 @@
                     </StackPanel>
                 </StackPanel>
                 <Button
+                    x:Uid="StartButton"
                     Grid.Row="4"
                     Grid.Column="0"
-                    Click="StartClick">
-                    Начать
-                </Button>
+                    Click="StartClick" />
             </Grid>
             <Grid
                 Grid.Row="0"
@@ -159,7 +199,7 @@
                     <RowDefinition Height="auto" />
                     <RowDefinition />
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="Цепочки" />
+                <TextBlock x:Uid="ChainsTextBlock" Grid.Row="0" />
                 <ScrollViewer Grid.Row="1">
                     <TextBox
                         AcceptsReturn="True"
