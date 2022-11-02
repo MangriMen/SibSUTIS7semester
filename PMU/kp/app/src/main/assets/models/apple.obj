@@ -1,6 +1,6 @@
 # Blender v3.0.1 OBJ File: ''
 # www.blender.org
-mtllib apple_m.mtl
+mtllib apple.mtl
 o apple
 v 0.461005 0.385194 -0.002411
 v 0.460778 0.385051 -0.020450

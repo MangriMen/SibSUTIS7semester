@@ -6,6 +6,7 @@ import de.javagl.obj.Obj
 import de.javagl.obj.ObjData
 import de.javagl.obj.ObjReader
 import de.javagl.obj.ObjUtils
+import ru.lyovkin.kp.MainActivity
 import ru.lyovkin.kp.Utils
 import ru.lyovkin.kp.gl.GLObject
 import ru.lyovkin.kp.gl.MatrixUtils
@@ -14,6 +15,8 @@ import ru.lyovkin.kp.gl.TextureUtils
 import java.io.InputStream
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
+import java.nio.charset.StandardCharsets
+import java.util.stream.Collectors
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
@@ -23,58 +26,32 @@ class Object(
     private val indicesBuffer: IntBuffer,
     private val texCords: FloatBuffer,
     private var colorBuffer: FloatBuffer = verticesBuffer,
-    private var alpha: Float = 1f
+    private var alpha: Float = 1f,
+    private var vertexShader: String = "",
+    private var fragmentShader: String = "",
 ) : GLObject {
     companion object {
-        private fun fromObj(obj: Obj): Object {
+        private fun fromObj(obj: Obj, vertexShader: String, fragmentShader: String): Object {
             val indices = ObjData.getFaceVertexIndices(obj)
             val vertices = ObjData.getVertices(obj)
             var texCoords = ObjData.getTexCoords(obj, 2)
-//            texCoords = Utils.createBuffer(FloatArray(vertices.capacity()) { 0f })
+            texCoords = Utils.createBuffer(FloatArray(vertices.capacity()) { 0f })
 
-            return Object(vertices, indices, texCoords)
+            return Object(vertices, indices, texCoords, vertices, 1f, vertexShader, fragmentShader)
         }
 
-        fun fromInputStream(inputStream: InputStream): Object {
+        fun fromInputStream(inputStream: InputStream, vertexShader: String, fragmentShader: String): Object {
             return fromObj(
                 ObjUtils.convertToRenderable(
                     ObjReader.read(inputStream)
-                )
+                ),
+                vertexShader,
+                fragmentShader
             )
         }
     }
 
     private val tag = this.javaClass.simpleName
-
-    private val vertexShader = ("attribute vec4 vertexPosition;\n"
-            + "attribute vec3 vertexColour;\n"
-            + "uniform float vertexAlpha;\n"
-            + "attribute vec2 vertexTextureCord;\n"
-            + "varying vec2 fragTextureCord;\n"
-            + "varying float fragAlpha;\n"
-            + "varying vec3 fragColour;\n"
-            + "uniform mat4 projection;\n"
-            + "uniform mat4 modelView;\n"
-            + "void main()\n"
-            + "{\n"
-            + "    gl_Position = projection * modelView * vertexPosition;\n"
-            + "    fragColour = vertexColour;\n"
-            + "    fragAlpha = vertexAlpha;\n"
-            + "    fragTextureCord = vertexTextureCord;\n"
-            + "}\n"
-            )
-
-    private val fragmentShader = ("precision mediump float;\n"
-            + "varying vec3 fragColour;\n"
-            + "varying float fragAlpha;\n"
-            + "uniform sampler2D texture;\n"
-            + "varying vec2 fragTextureCord;\n"
-            + "void main()\n"
-            + "{\n"
-            + "    gl_FragColor = vec4(fragColour, fragAlpha);\n"
-            + "    gl_FragColor += texture2D(texture, fragTextureCord);\n"
-            + "}\n"
-            )
 
     private var program: Int = 0
 
