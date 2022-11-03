@@ -3,76 +3,80 @@ package ru.lyovkin.kp
 import android.content.Context
 import android.opengl.GLES20.*
 import android.opengl.GLSurfaceView
-import ru.lyovkin.kp.figures.Object
 import ru.lyovkin.kp.gl.GLObject
-import java.nio.charset.StandardCharsets
-import java.util.stream.Collectors
+import ru.lyovkin.kp.gl.IGLObject
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 
 class MyRenderer(ctx: Context) : GLSurfaceView.Renderer {
-    private val objects: MutableList<GLObject> = mutableListOf()
-    private val bgColorR: Float = 0.8f
-    private val bgColorG: Float = 1.0f
-    private val bgColorB: Float = 0.1f
+    private val objects: MutableList<IGLObject> = mutableListOf()
+    private val bgColorR: Float = 0.0f
+    private val bgColorG: Float = 0.0f
+    private val bgColorB: Float = 0.0f
     private val bgColorA: Float = 1.0f
 
     init {
-        val vertexShader = Utils.inputStreamToString(ctx.assets.open("shaders/default_shader.vert"))
+        val vertexShader = Utils.inputStreamToString(ctx.assets.open("shaders/base_shader.vert"))
         val colorShader = Utils.inputStreamToString(ctx.assets.open("shaders/color_shader.frag"))
-//        val textureShader = Utils.inputStreamToString(ctx.assets.open("shaders/texture_shader.frag"))
+        val textureShader =
+            Utils.inputStreamToString(ctx.assets.open("shaders/texture_shader.frag"))
 
-        val table = Object.fromInputStream(ctx.assets.open("models/table.obj"), vertexShader, colorShader)
-        table.z = -10f
-        table.y = -1.5f
-        table.scaleX = 0.02f
-        table.scaleY = 0.02f
-        table.scaleZ = 0.02f
+        val table = GLObject.fromInputStream(
+            vertexShader,
+            colorShader,
+            ctx.assets.open("models/table.obj")
+        )
+        table.setPosition(0f, -1.5f, -10f)
+        table.setScale(0.02f, 0.02f, 0.02f)
 
-        val glass = Object.fromInputStream(ctx.assets.open("models/glass.obj"), vertexShader, colorShader)
-        glass.y = -0.5f
-        glass.z = -10f
-        glass.scaleX = 0.1f
-        glass.scaleY = 0.1f
-        glass.scaleZ = 0.1f
+        val glass = GLObject.fromInputStream(
+            vertexShader,
+            colorShader,
+            ctx.assets.open("models/glass.obj")
+        )
+        glass.setPosition(0f, -0.5f, -10f)
+        glass.setScale(0.1f, 0.1f, 0.1f)
         glass.setColor(1f, 1f, 1f, 0.2f)
 
-        val apple = Object.fromInputStream(ctx.assets.open("models/apple.obj"), vertexShader, colorShader)
-        apple.x = 0.7f
-        apple.y = -0.4f
-        apple.z = -10f
-        apple.scaleX = 0.5f
-        apple.scaleY = 0.5f
-        apple.scaleZ = 0.5f
+        val apple = GLObject.fromInputStream(
+            vertexShader,
+            textureShader,
+            ctx.assets.open("models/apple.obj"),
+            ctx.assets.open("models/apple.png")
+        )
+        apple.setPosition(0.7f, -0.4f, -10f)
+        apple.setScale(0.5f, 0.5f, 0.5f)
         apple.setColor(1f, 0f, 0f)
 
-        val pear = Object.fromInputStream(ctx.assets.open("models/pear.obj"), vertexShader, colorShader)
-        pear.x = 1.2f
-        pear.y = -0.1f
-        pear.z = -10f
-        pear.scaleX = 0.05f
-        pear.scaleY = 0.05f
-        pear.scaleZ = 0.05f
-        pear.rotateX = -45f
+        val pear = GLObject.fromInputStream(
+            vertexShader,
+            textureShader,
+            ctx.assets.open("models/pear.obj"),
+            ctx.assets.open("models/pear.jpg")
+        )
+        pear.setPosition(1.2f, -0.1f, -10f)
+        pear.setScale(0.05f, 0.05f, 0.05f)
+        pear.setRotation(-45f, 0f, 0f)
         pear.setColor(0.5f, 1f, 0.8f)
 
-        val banana = Object.fromInputStream(ctx.assets.open("models/banana.obj"), vertexShader, colorShader)
-        banana.x = -0.7f
-        banana.y = -0.4f
-        banana.z = -10f
-        banana.scaleX = 0.05f
-        banana.scaleY = 0.05f
-        banana.scaleZ = 0.05f
+        val banana = GLObject.fromInputStream(
+            vertexShader,
+            colorShader,
+            ctx.assets.open("models/banana.obj")
+        )
+        banana.setPosition(-0.7f, -0.4f, -11f)
+        banana.setScale(0.05f, 0.05f, 0.05f)
         banana.setColor(0f, 1f, 0f)
 
-        val pineapple = Object.fromInputStream(ctx.assets.open("models/pineapple.obj"), vertexShader, colorShader)
-        pineapple.x = -1.2f
-        pineapple.y = -0.3f
-        pineapple.z = -10f
-        pineapple.scaleX = 0.04f
-        pineapple.scaleY = 0.04f
-        pineapple.scaleZ = 0.04f
+        val pineapple = GLObject.fromInputStream(
+            vertexShader,
+            textureShader,
+            ctx.assets.open("models/pineapple.obj"),
+            ctx.assets.open("models/pineapple.jpg")
+        )
+        pineapple.setPosition(-1.2f, -0.3f, -10f)
+        pineapple.setScale(0.04f, 0.04f, 0.04f)
         pineapple.setColor(0.7f, 0.8f, 0f)
 
         objects.add(glass)
@@ -104,11 +108,11 @@ class MyRenderer(ctx: Context) : GLSurfaceView.Renderer {
     }
 
     override fun onDrawFrame(gl: GL10) {
-//        glClearColor(bgColorR, bgColorG, bgColorB, bgColorA)
+        glClearColor(bgColorR, bgColorG, bgColorB, bgColorA)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
 
         for (obj in objects) {
-            (obj as Object).rotateY += 1f
+            (obj as GLObject).rotateY += 1f
             obj.onDrawFrame(gl)
         }
     }

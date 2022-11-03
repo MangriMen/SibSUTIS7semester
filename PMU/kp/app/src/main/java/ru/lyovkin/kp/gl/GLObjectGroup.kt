@@ -4,8 +4,8 @@ import android.content.Context
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-class GLObjectGroup(val ctx: Context) : GLObject {
-    private val objects: MutableList<GLObject> = mutableListOf()
+class GLObjectGroup(val ctx: Context) : IGLObject {
+    private val objects: MutableList<IGLObject> = mutableListOf()
 
     private var _rotate = floatArrayOf(0f, 0f, 0f)
     private var _position = floatArrayOf(0f, 0f, 0f)
@@ -65,7 +65,7 @@ class GLObjectGroup(val ctx: Context) : GLObject {
             _scale[2] = value
         }
 
-    fun add(obj: GLObject) {
+    fun add(obj: IGLObject) {
         objects.add(obj)
     }
 
