@@ -20,32 +20,34 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val activityManager = getSystemService((ACTIVITY_SERVICE)) as ActivityManager
+        val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
         val configurationInfo = activityManager.deviceConfigurationInfo
 
         val isSupportES2 = configurationInfo.reqGlEsVersion >= 0x20000 || isProbablyEmulator
-        if (isSupportES2) {
-            glSurfaceView = GLSurfaceView(this)
-            if (isProbablyEmulator) {
-                glSurfaceView?.setEGLConfigChooser(
-                    8, 8, 8,
-                    8, 16, 0
-                )
-            }
-            glSurfaceView?.setEGLContextClientVersion(2)
 
-            glSurfaceView?.setRenderer(MyRenderer(this))
-            glSurfaceView?.renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
-            isRendererSet = true
-            setContentView(glSurfaceView)
+        if (!isSupportES2) {
+            Toast.makeText(
+                this,
+                "This device does not support OpenGL ES 2.0",
+                Toast.LENGTH_LONG
+            ).show()
+            return
         }
-        else {
-         Toast.makeText(
-             this,
-             "This device does not support OpenGL ES 2.0",
-             Toast.LENGTH_LONG
-         ).show()
+
+        glSurfaceView = GLSurfaceView(this)
+
+        if (isProbablyEmulator) {
+            glSurfaceView?.setEGLConfigChooser(
+                8, 8, 8,
+                8, 16, 0
+            )
         }
+        glSurfaceView?.setEGLContextClientVersion(2)
+        glSurfaceView?.setRenderer(MyRenderer(this))
+        glSurfaceView?.renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
+        isRendererSet = true
+
+        setContentView(glSurfaceView)
     }
 
     override fun onPause() {

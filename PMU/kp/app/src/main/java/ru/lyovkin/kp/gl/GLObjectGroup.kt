@@ -65,6 +65,21 @@ class GLObjectGroup(val ctx: Context) : IGLObject {
             _scale[2] = value
         }
 
+    override fun setColor(r: Float, g: Float, b: Float, a: Float) {
+    }
+
+    override fun setPosition(x: Float, y: Float, z: Float) {
+    }
+
+    override fun setRotation(x: Float, y: Float, z: Float) {
+    }
+
+    override fun setScale(x: Float, y: Float, z: Float) {
+    }
+
+    override fun setLightDirection(x: Float, y: Float, z: Float) {
+    }
+
     fun add(obj: IGLObject) {
         objects.add(obj)
     }

@@ -16,6 +16,13 @@ interface IGLObject {
     var scaleY: Float
     var scaleZ: Float
 
+    fun setColor(r: Float, g: Float, b: Float, a: Float = 1f)
+    fun setPosition(x: Float, y: Float, z: Float)
+    fun setRotation(x: Float, y: Float, z: Float)
+    fun setScale(x: Float, y: Float, z: Float)
+
+    fun setLightDirection(x: Float, y: Float, z: Float)
+
     fun onSurfaceCreated(gl: GL10, config: EGLConfig)
     fun onSurfaceChanged(gl: GL10, width: Int, height: Int)
     fun onDrawFrame(gl: GL10)

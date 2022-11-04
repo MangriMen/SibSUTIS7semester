@@ -17,7 +17,8 @@ import javax.microedition.khronos.opengles.GL10
 class GLObject(
     private val indicesBuffer: IntBuffer,
     private val verticesBuffer: FloatBuffer,
-    private val texCords: FloatBuffer,
+    private val texCordsBuffer: FloatBuffer,
+    private val normalBuffer: FloatBuffer,
     private var vertexShader: String = "",
     private var fragmentShader: String = "",
     private val texture: InputStream? = null,
@@ -36,11 +37,13 @@ class GLObject(
             val indices = ObjData.getFaceVertexIndices(obj)
             val vertices = ObjData.getVertices(obj)
             val texCoords = ObjData.getTexCoords(obj, 2)
+            val normals = ObjData.getNormals(obj)
 
             return GLObject(
                 indices,
                 vertices,
                 texCoords,
+                normals,
                 vertexShader,
                 fragmentShader,
                 texture,
@@ -64,23 +67,31 @@ class GLObject(
         }
     }
 
-    private var programId: Int = 0
+    /* GL ids */
+    private var programId = 0
     private var textureId = 0
 
+    /* Vertex shader */
     private var vertexLocation = 0
-    private var vertexColourLocation = 0
+    private var vertexColorLocation = 0
     private var vertexAlphaLocation = 0
     private var textureCordLocation = 0
+    private var vertexNormalLocation = 0
+    private var lightDirection = 0
     private var projectionLocation = 0
     private var modelViewLocation = 0
-    private var samplerLocation = 0
 
     private var projectionMatrix = MatrixUtils.getIdentityMatrix()
     private var modelViewMatrix = MatrixUtils.getIdentityMatrix()
 
+    /* Fragment shader */
+    private var samplerLocation = 0
+
+    /* Object fields */
     private var _rotate = floatArrayOf(0f, 0f, 0f)
     private var _position = floatArrayOf(0f, 0f, 0f)
     private var _scale = floatArrayOf(1f, 1f, 1f)
+    private var _lightDirection = floatArrayOf(0f, 0f, 0f)
 
     override var x: Float
         get() = _position[0]
@@ -142,18 +153,24 @@ class GLObject(
 
     private fun setupGraphics(width: Int, height: Int): Boolean {
         programId = ShaderUtils.createProgram(vertexShader, fragmentShader)
-
         if (programId == 0) {
             Log.e(tag, "Could not create program")
             return false
         }
 
+        if (texture != null) {
+            textureId = TextureUtils.loadTexture(texture)
+        }
+
         vertexLocation = glGetAttribLocation(programId, "vertexPosition")
-        vertexColourLocation = glGetAttribLocation(programId, "vertexColour")
+        vertexColorLocation = glGetAttribLocation(programId, "vertexColor")
         vertexAlphaLocation = glGetUniformLocation(programId, "vertexAlpha")
         textureCordLocation = glGetAttribLocation(programId, "vertexTextureCord")
+        vertexNormalLocation = glGetAttribLocation(programId, "vertexNormal")
+        lightDirection = glGetUniformLocation(programId, "lightDirection")
         projectionLocation = glGetUniformLocation(programId, "projection")
         modelViewLocation = glGetUniformLocation(programId, "modelView")
+
         samplerLocation = glGetUniformLocation(programId, "texture")
 
         MatrixUtils.matrixPerspective(
@@ -166,54 +183,42 @@ class GLObject(
 
         glViewport(0, 0, width, height)
 
-        return if (texture != null) {
-            textureId = TextureUtils.loadTexture(texture)
-            textureId != 0
-        } else {
-            true
-        }
+        return textureId != 0
     }
 
-    fun setColor(r: Float, g: Float, b: Float, a: Float = 1f) {
-        alpha = a
-
+    override fun setColor(r: Float, g: Float, b: Float, a: Float) {
         val color = FloatArray(colorBuffer.capacity()) { 0f }
-        var counter = 0
-        for (i in color.indices) {
-            when (counter) {
-                0 -> {
-                    color[i] = r
-                    counter++
-                }
-                1 -> {
-                    color[i] = g
-                    counter++
-                }
-                2 -> {
-                    color[i] = b
-                    counter = 0
-                }
-            }
+        for (i in 0 until color.indices.count() step 3) {
+            color[i] = r
+            color[i + 1] = g
+            color[i + 2] = b
         }
         colorBuffer = Utils.createBuffer(color)
+        alpha = a
     }
 
-    fun setPosition(x: Float, y: Float, z: Float) {
+    override fun setPosition(x: Float, y: Float, z: Float) {
         this.x = x
         this.y = y
         this.z = z
     }
 
-    fun setRotation(x: Float, y: Float, z: Float) {
+    override fun setRotation(x: Float, y: Float, z: Float) {
         this.rotateX = x
         this.rotateY = y
         this.rotateZ = z
     }
 
-    fun setScale(x: Float, y: Float, z: Float) {
+    override fun setScale(x: Float, y: Float, z: Float) {
         this.scaleX = x
         this.scaleY = y
         this.scaleZ = z
+    }
+
+    override fun setLightDirection(x: Float, y: Float, z: Float) {
+        this._lightDirection[0] = x
+        this._lightDirection[1] = y
+        this._lightDirection[2] = z
     }
 
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig) {
@@ -224,8 +229,7 @@ class GLObject(
     }
 
     override fun onDrawFrame(gl: GL10) {
-        /* Matrix */
-
+        /* Matrix setup */
         MatrixUtils.matrixIdentityFunction(modelViewMatrix)
 
         MatrixUtils.matrixRotateX(modelViewMatrix, rotateX)
@@ -236,27 +240,39 @@ class GLObject(
 
         MatrixUtils.matrixTranslate(modelViewMatrix, x, y, z)
 
-        /* Shaders */
+        /* Shaders program */
         glUseProgram(programId)
 
+        /* Position */
         glVertexAttribPointer(vertexLocation, 3, GL_FLOAT, false, 0, verticesBuffer)
         glEnableVertexAttribArray(vertexLocation)
 
-        glVertexAttribPointer(vertexColourLocation, 3, GL_FLOAT, false, 0, colorBuffer)
-        glEnableVertexAttribArray(vertexColourLocation)
+        /* Color */
+        glVertexAttribPointer(vertexColorLocation, 3, GL_FLOAT, false, 0, colorBuffer)
+        glEnableVertexAttribArray(vertexColorLocation)
 
         glUniform1f(vertexAlphaLocation, alpha)
 
-        glVertexAttribPointer(textureCordLocation, 2, GL_FLOAT, false, 0, texCords)
+        glVertexAttribPointer(textureCordLocation, 2, GL_FLOAT, false, 0, texCordsBuffer)
         glEnableVertexAttribArray(textureCordLocation)
 
-        glUniformMatrix4fv(projectionLocation, 1, false, projectionMatrix, 0)
-        glUniformMatrix4fv(modelViewLocation, 1, false, modelViewMatrix, 0)
+        /* Normals */
+        if (normalBuffer.capacity() > 0) {
+            glVertexAttribPointer(vertexNormalLocation, 3, GL_FLOAT, false, 0, normalBuffer)
+            glEnableVertexAttribArray(vertexNormalLocation)
+        }
 
-        /* Textures */
+        /* Light */
+        glUniform3fv(lightDirection, 1, _lightDirection, 0)
+
+        /* Texture */
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, textureId)
         glUniform1i(samplerLocation, 0)
+
+        /* Matrix */
+        glUniformMatrix4fv(projectionLocation, 1, false, projectionMatrix, 0)
+        glUniformMatrix4fv(modelViewLocation, 1, false, modelViewMatrix, 0)
 
         /* Drawing */
         glDrawElements(GL_TRIANGLES, indicesBuffer.capacity(), GL_UNSIGNED_INT, indicesBuffer)
