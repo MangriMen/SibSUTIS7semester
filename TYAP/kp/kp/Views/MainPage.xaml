@@ -93,6 +93,7 @@
                     <RadioButtons
                         Grid.Row="1"
                         Grid.Column="1"
+                        Grid.ColumnSpan="2"
                         SelectedIndex="{x:Bind SelectedDirectionIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                         <RadioButtons.Style>
                             <Style TargetType="RadioButtons">

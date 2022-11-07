@@ -386,16 +386,11 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
             {
                 var isSubChainMultiple = (SubChain.Length % _chainMultiplicity) == 0;
                 var diff = _chainMultiplicity - SubChain.Length;
-                var startChainLength = isSubChainMultiple ? _chainMultiplicity - 1 : (diff > 0 ? diff - 1 : -diff + 1);
+                var startChainLength = _chainMultiplicity - 1;
                 var endChainLength = _chainMultiplicity - 1;
 
-                if (SubChain.Length == 1)
-                {
-                    startChainLength++;
-                }
-
                 /* Chain begin rules - 1 */
-                for (var i = 0; i < _chainMultiplicity - 1; i++)
+                for (var i = 0; i < startChainLength; i++)
                 {
                     _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
                     foreach (var symbol in _alphabet)
@@ -404,8 +399,6 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
                     }
                     currentRule++;
                 }
-
-                var jumpTempRule = currentRule;
 
                 /* Jump to start rule when begin chain is multiple */
                 _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
@@ -425,7 +418,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
                 }
 
                 /* Jump to sub-chain rules */
-                var jumpRule = (_chainMultiplicity - SubChain.Length - 1) < 0 ? 0 : _chainMultiplicity - SubChain.Length;
+                var jumpRule = ((_chainMultiplicity - SubChain.Length - 1) < 0 && isSubChainMultiple) ? 0 : Convert.ToInt32(MathF.Abs(_chainMultiplicity - SubChain.Length));
                 _grammar.TryAdd(ruleSymbols[jumpRule].ToString(), new());
                 if (SubChain.Length > 1)
                 {
@@ -433,7 +426,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
                 }
                 else
                 {
-                    _grammar[ruleSymbols[0].ToString()].Add(BuildSequence(SelectedDirectionIndex, $"{SubChain[0]}", ruleSymbols[_chainMultiplicity]));
+                    //_grammar[ruleSymbols[0].ToString()].Add(BuildSequence(SelectedDirectionIndex, $"{SubChain[0]}", ruleSymbols[_chainMultiplicity]));
                     _grammar[ruleSymbols[jumpRule].ToString()].Add($"{SubChain[0]}");
                 }
 
@@ -445,10 +438,9 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
                         _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
                         _grammar[ruleSymbols[currentRule++].ToString()].Add(BuildSequence(SelectedDirectionIndex, $"{symbol}", ruleSymbols[currentRule]));
                     }
+                    _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                    _grammar[ruleSymbols[currentRule].ToString()].Add($"{SubChain[^1]}");
                 }
-
-                //_grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
-                //_grammar[ruleSymbols[currentRule].ToString()].Add($"{SubChain[^1]}");
 
                 ///* Chain end rules */
                 //_grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
