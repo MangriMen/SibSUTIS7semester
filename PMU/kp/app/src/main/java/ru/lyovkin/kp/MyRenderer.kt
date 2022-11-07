@@ -122,7 +122,7 @@ class MyRenderer(ctx: Context) : GLSurfaceView.Renderer {
         val candle = (objects[objects.size - 2] as GLObject)
 
         for (obj in objects) {
-            //            (obj as GLObject).rotateY += 1f
+            (obj as GLObject).rotateY += 1f
             obj.setLightDirection(candle.x - obj.x, candle.y + 1f - obj.y, candle.z - obj.z)
             obj.onDrawFrame(gl)
         }
