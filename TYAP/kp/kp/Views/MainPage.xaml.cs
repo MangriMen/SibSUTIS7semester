@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml;
 using Windows.Storage.Pickers;
 using System.Runtime.InteropServices;
 using WinRT;
+using Microsoft.Extensions.Logging;
 
 namespace kp.Views;
 
@@ -387,7 +388,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
                 var isSubChainMultiple = (SubChain.Length % _chainMultiplicity) == 0;
                 var diff = _chainMultiplicity - SubChain.Length;
                 var startChainLength = _chainMultiplicity - 1;
-                var endChainLength = _chainMultiplicity - 1;
+                var endChainLength = _chainMultiplicity;
 
                 /* Chain begin rules - 1 */
                 for (var i = 0; i < startChainLength; i++)
@@ -442,31 +443,65 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
                     _grammar[ruleSymbols[currentRule].ToString()].Add($"{SubChain[^1]}");
                 }
 
-                ///* Chain end rules */
-                //_grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
-                //_grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, SubChain[^1].ToString(), ruleSymbols[++currentRule]));
+                /* Chain end rules */
+                if (SubChain.Length > 1)
+                {
+                    _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                    _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, SubChain[^1].ToString(), ruleSymbols[++currentRule + 1]));
 
-                //for (var i = 0; i < endChainLength; i++)
-                //{
-                //    _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
-                //    foreach (var symbol in _alphabet)
-                //    {
-                //        _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, symbol, ruleSymbols[currentRule + 1]));
-                //    }
-                //    currentRule++;
-                //}
-                //_grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
-                //foreach (var symbol in _alphabet)
-                //{
-                //    _grammar[ruleSymbols[currentRule].ToString()].Add($"{symbol}");
-                //}
+                    _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                    _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, SubChain[^1].ToString(), ruleSymbols[++currentRule]));
+
+                    _grammar.TryAdd(ruleSymbols[0].ToString(), new());
+                    _grammar[ruleSymbols[0].ToString()].Add(BuildSequence(SelectedDirectionIndex, SubChain[0].ToString(), ruleSymbols[currentRule - 1]));
+                }
+                else
+                {
+                    _grammar.TryAdd(ruleSymbols[0].ToString(), new());
+                    _grammar[ruleSymbols[0].ToString()].Add(BuildSequence(SelectedDirectionIndex, SubChain[^1].ToString(), ruleSymbols[currentRule]));
+                }
+
+                if (SubChain.Length > 1)
+                {
+                    foreach (var symbol in SubChain[1..^1])
+                    {
+                        _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                        _grammar[ruleSymbols[currentRule++].ToString()].Add(BuildSequence(SelectedDirectionIndex, $"{symbol}", ruleSymbols[currentRule]));
+                    }
+                    _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                    _grammar[ruleSymbols[currentRule].ToString()].Add($"{SubChain[^1]}");
+                }
+
+                var exitRule = currentRule + Convert.ToInt32(MathF.Abs(_chainMultiplicity - SubChain.Length)) - 1;
+
+                for (var i = 0; i < endChainLength; i++)
+                {
+                    _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                    foreach (var symbol in _alphabet)
+                    {
+                        _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, symbol, ruleSymbols[currentRule + 1]));
+                    }
+                    currentRule++;
+                }
+
+                _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                foreach (var symbol in _alphabet)
+                {
+                    _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, symbol, ruleSymbols[currentRule - _chainMultiplicity]));
+                }
+
+                _grammar.TryAdd(ruleSymbols[exitRule].ToString(), new());
+                foreach (var symbol in _alphabet)
+                {
+                    _grammar[ruleSymbols[exitRule].ToString()].Add($"{symbol}");
+                }
             }
         }
 
-        //foreach (var rule in _grammar)
-        //{
-        //    _grammar[rule.Key] = rule.Value.Distinct().ToList();
-        //}
+        foreach (var rule in _grammar)
+        {
+            _grammar[rule.Key] = rule.Value.Distinct().ToList();
+        }
 
         /* Build grammar */
         foreach (var rule in _grammar)
