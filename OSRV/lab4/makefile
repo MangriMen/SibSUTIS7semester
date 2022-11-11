@@ -1,12 +1,12 @@
 .PHONY: run1
 
 CXX=g++
-CXXFLAGS=-std=c++0x
+CXXFLAGS=-std=c++0x -g
 
 OBJECTS=/root/labs/plates.o
 LIBS=-lvg
 
-all: part1
+all: part1 part2 part3 part4
 
 part1:
 	$(CXX) $(CXXFLAGS) lab4_1.cpp $(OBJECTS) -o $@.out $(LIBS)

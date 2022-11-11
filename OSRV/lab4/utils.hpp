@@ -14,6 +14,8 @@ const int USEC_IN_SEC = 1000000;
 long long pointsToUSec(int points, double speed);
 long long diffTimeAsUSec(const timespec& start, const timespec& end);
 timespec normalizeTimespec(timespec ts);
+timespec uSecToTimespec(long long useconds);
+timespec addTimespec(const timespec& a, const timespec& b);
 
 long long pointsToUSec(int points, double speed)
 {
@@ -39,5 +41,23 @@ timespec normalizeTimespec(timespec ts)
         ts.tv_sec++;
         ts.tv_nsec -= 1e9;
     }
+    return ts;
+}
+
+timespec uSecToTimespec(long long useconds)
+{
+    timespec ts;
+    ts.tv_sec += useconds / USEC_IN_SEC;
+    ts.tv_nsec += (useconds % USEC_IN_SEC) * 1000;
+    ts = normalizeTimespec(ts);
+    return ts;
+}
+
+timespec addTimespec(const timespec& a, const timespec& b)
+{
+    timespec ts = a;
+    ts.tv_sec += b.tv_sec;
+    ts.tv_nsec += b.tv_nsec;
+    ts = normalizeTimespec(ts);
     return ts;
 }

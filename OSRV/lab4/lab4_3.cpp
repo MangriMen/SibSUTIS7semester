@@ -1,4 +1,5 @@
 #include <iostream>
+#include <set>
 #include <cstdlib>
 #include <cstdio>
 #include <ctime>
@@ -34,8 +35,6 @@ void* calcAndShootTarget(void* arg)
 
     long long fire_delay = time_to_target - time_to_climb;
 
-    cout << fire_delay / USEC_IN_SEC << endl;
-
     timespec fire_time = data.end_time;
     fire_time.tv_sec += fire_delay / USEC_IN_SEC;
     fire_time.tv_nsec += (fire_delay % USEC_IN_SEC) * 1000;
@@ -45,45 +44,35 @@ void* calcAndShootTarget(void* arg)
     putreg(RG_GUNS, GUNS_SHOOT);
 }
 
-void* leftSideHandler(void* arg)
+void* locGroupHandler(void* arg)
 {
     timespec start;
     timespec end;
 
-    bool isSkip = false;
-
+    set<int> ufo_heights;
     while (true) {
         if (getreg(RG_LOCN) == 1 && getreg(RG_LOCW) == 3) {
-            clock_gettime(CLOCK_REALTIME, &start);
-            while (true) {
-                usleep(1);
-                clock_gettime(CLOCK_REALTIME, &end);
-                long long usec = diffTimeAsUSec(start, end);
-                if (usec > 2000000) {
-                    cout << "Skip misdetection on left side" << endl;
-                    isSkip = true;
-                    break;
-                }
-                if (getreg(RG_LOCN) == 2 && getreg(RG_LOCW) == 3) {
-                    clock_gettime(CLOCK_REALTIME, &end);
-                    break;
-                }
+            if (ufo_heights.find(getreg(RG_LOCY)) == ufo_heights.end()) {
+                clock_gettime(CLOCK_REALTIME, &start);
+                ufo_heights.insert(getreg(RG_LOCY));
             }
-
-            if (isSkip) {
-                isSkip = false;
-                continue;
-            }
-
-            target_data data;
-            data.start_time = start;
-            data.end_time = end;
-            data.loc1 = XL1;
-            data.loc2 = XL2;
-            data.height = getreg(RG_LOCY);
-
-            pthread_create(NULL, NULL, &calcAndShootTarget, (void*)&data);
         }
+
+        if (getreg(RG_LOCN) == 2 && getreg(RG_LOCW) == 3) {
+            if (ufo_heights.find(getreg(RG_LOCY)) != ufo_heights.end()) {
+                clock_gettime(CLOCK_REALTIME, &end);
+                target_data data;
+                data.start_time = start;
+                data.end_time = end;
+                data.loc1 = XL1;
+                data.loc2 = XL2;
+                data.height = getreg(RG_LOCY);
+
+                pthread_create(NULL, NULL, &calcAndShootTarget, (void*)&data);
+                ufo_heights.erase(getreg(RG_LOCY));
+            }
+        }
+
         usleep(1);
     }
 }
@@ -93,40 +82,30 @@ void* rightSideHandler(void* arg)
     timespec start;
     timespec end;
 
-    bool isSkip = false;
-
+    set<int> ufo_heights;
     while (true) {
         if (getreg(RG_LOCN) == 4 && getreg(RG_LOCW) == 3) {
-            clock_gettime(CLOCK_REALTIME, &start);
-            while (true) {
-                usleep(1);
-                clock_gettime(CLOCK_REALTIME, &end);
-                long long usec = diffTimeAsUSec(start, end);
-                if (usec > 2000000) {
-                    cout << "Skip misdetection on right side" << endl;
-                    isSkip = true;
-                    break;
-                }
-                if (getreg(RG_LOCN) == 3 && getreg(RG_LOCW) == 3) {
-                    clock_gettime(CLOCK_REALTIME, &end);
-                    break;
-                }
+            if (ufo_heights.find(getreg(RG_LOCY)) == ufo_heights.end()) {
+                clock_gettime(CLOCK_REALTIME, &start);
+                ufo_heights.insert(getreg(RG_LOCY));
             }
-
-            if (isSkip) {
-                isSkip = false;
-                continue;
-            }
-
-            target_data data;
-            data.start_time = start;
-            data.end_time = end;
-            data.loc1 = XL4;
-            data.loc2 = XL3;
-            data.height = getreg(RG_LOCY);
-
-            pthread_create(NULL, NULL, &calcAndShootTarget, (void*)&data);
         }
+
+        if (getreg(RG_LOCN) == 3 && getreg(RG_LOCW) == 3) {
+            if (ufo_heights.find(getreg(RG_LOCY)) != ufo_heights.end()) {
+                clock_gettime(CLOCK_REALTIME, &end);
+                target_data data;
+                data.start_time = start;
+                data.end_time = end;
+                data.loc1 = XL4;
+                data.loc2 = XL3;
+                data.height = getreg(RG_LOCY);
+
+                pthread_create(NULL, NULL, &calcAndShootTarget, (void*)&data);
+                ufo_heights.erase(getreg(RG_LOCY));
+            }
+        }
+
         usleep(1);
     }
 }
@@ -140,8 +119,8 @@ int main()
     pthread_t left_side;
     pthread_t right_side;
 
-    pthread_create(&left_side, NULL, &leftSideHandler, NULL);
-    pthread_create(&right_side, NULL, &rightSideHandler, NULL);
+    pthread_create(&left_side, NULL, locGroupHandler, NULL);
+    pthread_create(&right_side, NULL, rightSideHandler, NULL);
 
     pthread_join(left_side, NULL);
     pthread_join(right_side, NULL);
