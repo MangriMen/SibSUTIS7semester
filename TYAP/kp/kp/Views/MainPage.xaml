@@ -151,12 +151,18 @@
                         x:Uid="RegularGrammarTextBox"
                         Grid.Row="0"
                         Grid.Column="0"
-                        MinHeight="180"
+                        MinHeight="80"
                         VerticalAlignment="Stretch"
                         AcceptsReturn="True"
                         FontFamily="Cascadia Code"
                         Text="{x:Bind RawGrammar, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        TextWrapping="Wrap" />
+                        TextWrapping="Wrap">
+                        <TextBox.HeaderTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <TextBlock FontFamily="SegoeUI Variable" Text="{Binding}" />
+                            </DataTemplate>
+                        </TextBox.HeaderTemplate>
+                    </TextBox>
                 </ScrollViewer>
                 <StackPanel
                     Grid.Row="3"
@@ -196,24 +202,21 @@
                     <Button x:Uid="StartButton" Click="StartClick" />
                 </StackPanel>
             </Grid>
-            <Grid
-                Grid.Row="0"
-                Grid.Column="1"
-                RowSpacing="16">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="auto" />
-                    <RowDefinition />
-                </Grid.RowDefinitions>
-                <TextBlock x:Uid="ChainsTextBlock" Grid.Row="0" />
-                <ScrollViewer Grid.Row="1">
-                    <TextBox
-                        AcceptsReturn="True"
-                        FontFamily="Cascadia Code"
-                        IsReadOnly="True"
-                        Text="{x:Bind Chains, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        TextWrapping="Wrap" />
-                </ScrollViewer>
-            </Grid>
+            <ScrollViewer Grid.Row="0" Grid.Column="1">
+                <TextBox
+                    x:Uid="ChainsTextBox"
+                    AcceptsReturn="True"
+                    FontFamily="Cascadia Code"
+                    IsReadOnly="True"
+                    Text="{x:Bind Chains, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    TextWrapping="Wrap">
+                    <TextBox.HeaderTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <TextBlock FontFamily="SegoeUI Variable" Text="{Binding}" />
+                        </DataTemplate>
+                    </TextBox.HeaderTemplate>
+                </TextBox>
+            </ScrollViewer>
         </Grid>
 
     </Grid>

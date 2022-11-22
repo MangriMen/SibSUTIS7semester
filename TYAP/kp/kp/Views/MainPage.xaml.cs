@@ -23,12 +23,12 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         'R', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
     };
 
+    private Dictionary<string, List<string>> _grammar = new();
+
     public static string Grammar
     {
         get; private set;
     } = "";
-
-    private Dictionary<string, List<string>> _grammar = new();
 
     private string _rawGrammar = "";
     private string RawGrammar
@@ -63,15 +63,29 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         set
         {
             _alphabetStr = value;
-            _alphabet = value.Replace(" ", "").Split(",").Distinct().ToList().FindAll(item => item.Length == 1);
+            _alphabet = Regex.Replace(value, @"\s+", "").Split(",").Distinct().ToList().FindAll(item => item.Length == 1);
             _alphabet.Sort();
+            foreach (var symbol in SubChain)
+            {
+                if (!_alphabet.Contains(symbol.ToString()))
+                {
+                    SubChain = "";
+                    break;
+                }
+            }
         }
     }
 
+    private string _subChain = "";
     private string SubChain
     {
-        get; set;
-    } = "";
+        get => _subChain;
+        set
+        {
+            _subChain = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SubChain)));
+        }
+    }
 
     private int _chainMultiplicity = 1;
     private string ChainMultiplicity
@@ -502,32 +516,24 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
 
     private void AlphabetChanging(TextBox sender, TextBoxTextChangingEventArgs args)
     {
-        var condition = !Regex.IsMatch(sender.Text[sender.SelectionStart - 1].ToString(), @"[a-z]|,|\s")
-            || Regex.IsMatch(sender.Text, @"[a-z]{2,}|[a-z]\s|^,+|^\s+|,,|,\s+,|\s{2,}")
-            || _alphabet.Contains(sender.Text[sender.SelectionStart - 1].ToString());
-        RevertTextBoxEnteredSymbol(sender, condition);
+        try
+        {
+            var condition = !Regex.IsMatch(sender.Text[sender.SelectionStart - 1].ToString(), @"[a-z]|,|\s")
+                || Regex.IsMatch(sender.Text, @"[a-z]{2,}|[a-z]\s|^,+|^\s+|,,|,\s+,|\s{2,}")
+                || _alphabet.Contains(sender.Text[sender.SelectionStart - 1].ToString());
+            Utils.RevertTextBoxEnteredSymbol(sender, condition);
+        }
+        catch { }
     }
 
     private void SubChainChanging(TextBox sender, TextBoxTextChangingEventArgs args)
     {
-        var condition = !_alphabet.Contains(sender.Text[sender.SelectionStart - 1].ToString());
-        RevertTextBoxEnteredSymbol(sender, condition);
-    }
-
-    private static void RevertTextBoxEnteredSymbol(TextBox sender, bool condition)
-    {
-        var prevSelectionPos = sender.SelectionStart;
-
-        if (sender.Text.Length == 0)
+        try
         {
-            return;
+            var condition = !_alphabet.Contains(sender.Text[sender.SelectionStart - 1].ToString());
+            Utils.RevertTextBoxEnteredSymbol(sender, condition);
         }
-
-        if (condition)
-        {
-            sender.Text = sender.Text.Remove(sender.SelectionStart - 1, 1);
-            sender.SelectionStart = prevSelectionPos - 1;
-        }
+        catch { }
     }
 
     public static async void SaveGrammarToFile()

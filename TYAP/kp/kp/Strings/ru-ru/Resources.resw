@@ -195,7 +195,7 @@
   <data name="ChainMultiplicityNumberBox.Header" xml:space="preserve">
     <value>Кратность длин цепочек</value>
   </data>
-  <data name="ChainsTextBlock.Text" xml:space="preserve">
+  <data name="ChainsTextBox.Header" xml:space="preserve">
     <value>Цепочки</value>
   </data>
   <data name="FromNumberBox.Header" xml:space="preserve">
@@ -232,7 +232,7 @@
     <value>Символы алфавита, разделённые запятыми</value>
   </data>
   <data name="SubChainTextBox.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Допустимы только символы алфавита. Максимум 24 символа</value>
+    <value>Допустимы только символы алфавита. Максимум 23 - кратность символов</value>
   </data>
   <data name="GenerateAndStartButton.Content" xml:space="preserve">
     <value>Сгенерировать и Начать</value>
