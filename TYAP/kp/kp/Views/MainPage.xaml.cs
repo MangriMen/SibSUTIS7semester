@@ -5,25 +5,30 @@ using kp.ViewModels;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml;
 using Windows.Storage.Pickers;
-using System.Runtime.InteropServices;
-using WinRT;
-using Microsoft.Extensions.Logging;
+using kp.Models;
+using kp.Helpers;
 
 namespace kp.Views;
 
 public sealed partial class MainPage : Page, INotifyPropertyChanged
 {
-    private const char RULE_SEPARATOR = ':';
-    private const char SEQUENCE_SEPARATOR = '|';
-    private const string START_NON_TERMINATE_SYMBOL = "S";
-    private const int MAX_RECURSION = 10000;
-
-    private readonly List<char> ruleSymbols = new() {
+    private static readonly char RULE_SEPARATOR = ':';
+    private static readonly char SEQUENCE_SEPARATOR = '|';
+    private static readonly string START_NON_TERMINATE_SYMBOL = "S";
+    private static readonly int MAX_RECURSION = 10000;
+    private static readonly List<char> ruleSymbols = new() {
         START_NON_TERMINATE_SYMBOL[0],
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
         'I', 'J', 'K', 'L', 'M', 'O', 'P', 'Q',
         'R', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
     };
+
+    public static string Grammar
+    {
+        get; private set;
+    } = "";
+
+    private Dictionary<string, List<string>> _grammar = new();
 
     private string _rawGrammar = "";
     private string RawGrammar
@@ -35,10 +40,6 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RawGrammar)));
         }
     }
-    public static string Grammar
-    {
-        get; private set;
-    } = "";
 
     private string _chains = "";
     private string Chains
@@ -51,33 +52,12 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         }
     }
 
-    private int _sequenceLengthMin = 0;
-    private int _sequenceLengthMax = 2;
-
-    private int SequenceLengthMin
-    {
-        get => _sequenceLengthMin;
-        set
-        {
-            _sequenceLengthMin = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SequenceLengthMin)));
-        }
-    }
-    private int SequenceLengthMax
-    {
-        get => _sequenceLengthMax;
-        set
-        {
-            _sequenceLengthMax = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SequenceLengthMax)));
-        }
-    }
-
-    private Dictionary<string, List<string>> _grammar = new();
+    private int SequenceLengthMin { get; set; } = 0;
+    private int SequenceLengthMax { get; set; } = 2;
 
     private List<string> _alphabet = new();
-    public string _alphabetStr = "";
-    public string Alphabet
+    private string _alphabetStr = "";
+    private string Alphabet
     {
         get => _alphabetStr;
         set
@@ -88,22 +68,19 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         }
     }
 
-    public string SubChain
+    private string SubChain
     {
         get; set;
     } = "";
 
     private int _chainMultiplicity = 1;
-    public string ChainMultiplicity
+    private string ChainMultiplicity
     {
         get => _chainMultiplicity.ToString();
         set => _chainMultiplicity = int.Parse(value != string.Empty ? value : "1");
     }
 
-    public int SelectedDirectionIndex
-    {
-        get; set;
-    } = 1;
+    private int SelectedDirectionIndex { get; set; } = 1;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -116,6 +93,22 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
     {
         ViewModel = App.GetService<MainViewModel>();
         InitializeComponent();
+    }
+
+    private void GenerateClick(object sender, RoutedEventArgs e)
+    {
+        GenerateRegularGrammar();
+    }
+
+    private void StartClick(object sender, RoutedEventArgs e)
+    {
+        BuildChainsByRegularGrammar();
+    }
+
+    private void GenerateAndStartClick(object sender, RoutedEventArgs e)
+    {
+        GenerateRegularGrammar();
+        BuildChainsByRegularGrammar();
     }
 
     public static Dictionary<string, List<string>> ParseGrammar(string rawGrammar)
@@ -143,17 +136,17 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         return parsedGrammar;
     }
 
-    private void StartClick(object sender, RoutedEventArgs e)
+    private void BuildChainsByRegularGrammar()
     {
         try
         {
             _grammar = ParseGrammar(RawGrammar);
 
             var chains = GenerateSequences(_grammar, SequenceLengthMin, SequenceLengthMax);
+            var chainsOutput = chains.Where(chain => chain.raw.Length >= SequenceLengthMin && chain.raw.Length <= SequenceLengthMax);
+            var output = chainsOutput.Select(chain => chain.GetFormattedOutput());
 
-            var chainsOutput = chains.Where(chain => chain.Length >= SequenceLengthMin && chain.Length <= SequenceLengthMax);
-
-            Chains = string.Join('\n', chainsOutput);
+            Chains = string.Join('\n', output);
         }
         catch (GrammarException)
         {
@@ -174,56 +167,58 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         }
     }
 
-    public static List<string> GenerateSequences(Dictionary<string, List<string>> grammar, int sequenceLengthMin, int sequenceLengthMax)
+    public static List<Chain> GenerateSequences(Dictionary<string, List<string>> grammar, int sequenceLengthMin, int sequenceLengthMax)
     {
-        var chains = new List<string>();
-        var uncompletedChains = new List<string>();
+        var chains = new List<Chain>();
+        var uncompletedChains = new List<Chain>();
+        var newUncompletedChains = new List<Chain>();
 
         foreach (var ruleSequence in grammar[START_NON_TERMINATE_SYMBOL])
         {
             var isValid = Is_valid(ruleSequence, grammar, sequenceLengthMin, sequenceLengthMax);
             if (isValid == 0 && ruleSequence.Length >= sequenceLengthMin)
             {
-                chains.Add(ruleSequence);
+                chains.Add(new Chain(ruleSequence, new string[] { START_NON_TERMINATE_SYMBOL, ruleSequence }));
             }
             else if (isValid == -2)
             {
-                uncompletedChains.Add(ruleSequence);
+                uncompletedChains.Add(new Chain(ruleSequence, new string[] { START_NON_TERMINATE_SYMBOL, ruleSequence }));
             }
         }
 
         var tempChain = new StringBuilder();
-        var count = 0;
-        while (count < MAX_RECURSION && uncompletedChains.Count > 0)
+        for (var count = 0; count < MAX_RECURSION && uncompletedChains.Count > 0; count++)
         {
-            var newUncompletedChains = new List<string>();
-            count++;
+            newUncompletedChains.Clear();
             foreach (var uncompletedChain in uncompletedChains)
             {
                 tempChain.Clear();
-                for (var i = 0; i < uncompletedChain.Length; i++)
+                for (var i = 0; i < uncompletedChain.raw.Length; i++)
                 {
-                    if (!grammar.ContainsKey(uncompletedChain[i].ToString()))
+                    if (!grammar.ContainsKey(uncompletedChain.raw[i].ToString()))
                     {
-                        tempChain.Append(uncompletedChain[i]);
+                        tempChain.Append(uncompletedChain.raw[i]);
                     }
                     else
                     {
-                        foreach (var ruleSequence in grammar[uncompletedChain[i].ToString()])
+                        foreach (var ruleSequence in grammar[uncompletedChain.raw[i].ToString()])
                         {
-                            var res = string.Concat(tempChain.ToString(), ruleSequence, uncompletedChain.AsSpan(i + 1));
+                            var res = new Chain
+                            {
+                                output = uncompletedChain.output.ToList(),
+                                raw = $"{tempChain}{ruleSequence}{uncompletedChain.raw.AsSpan(i + 1)}"
+                            };
+                            res.output.Add(uncompletedChain.output[^1].Replace(uncompletedChain.raw[i].ToString(), ruleSequence));
 
-                            var isValid = Is_valid(res, grammar, sequenceLengthMin, sequenceLengthMax);
+                            var isValid = Is_valid(res.raw, grammar, sequenceLengthMin, sequenceLengthMax);
                             if (isValid == 0)
                             {
-                                if (chains.Contains(res) || res.Length < sequenceLengthMin)
+                                if (chains.Contains(res) || res.raw.Length < sequenceLengthMin)
                                 {
                                     break;
                                 }
-                                else
-                                {
-                                    chains.Add(res);
-                                }
+
+                                chains.Add(res);
                             }
                             else if (isValid == -2)
                             {
@@ -268,242 +263,227 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         return (non_term_sym > 0) ? -2 : 0;
     }
 
-    private static string BuildSequence(int direction, string symbol, char rule)
+    private static string BuildSequence(string symbol, char? rule = null, int direction = -1)
     {
-        if (direction == 0)
+        if (rule == null)
         {
-            return $"{rule}{symbol}";
+            return $"{symbol}";
         }
-        else
-        {
-            return $"{symbol}{rule}";
-        }
+
+        return direction == 0 ? $"{rule}{symbol}" : $"{symbol}{rule}";
     }
 
-    private void GenerateClick(object sender, RoutedEventArgs e)
+    private static string BuildSequence(char symbol, char? rule = null, int direction = -1)
     {
-        _grammar.Clear();
+        return BuildSequence(symbol.ToString(), rule, direction);
+    }
+
+    private void GenerateRegularGrammar()
+    {
         if (Alphabet.Length == 0)
         {
             return;
         }
 
+        _grammar.Clear();
         RawGrammar = "";
 
-        if (SubChain.Length + 2 > ruleSymbols.Count)
+        if (SubChain.Length + (_chainMultiplicity - 1) * 2 + 1 > ruleSymbols.Count)
         {
             _ = new ContentDialog()
             {
                 Title = "Ошибка",
-                Content = new TextBlock() { TextWrapping = TextWrapping.Wrap, Text = "Общая длина начальной и конечной цепочек должна быть меньше 26" },
+                Content = new TextBlock()
+                {
+                    TextWrapping = TextWrapping.Wrap,
+                    Text = $"Длина подцепочки при кратности {_chainMultiplicity} должна не больше {ruleSymbols.Count - (_chainMultiplicity - 1) * 2}"
+                },
                 CloseButtonText = "Закрыть",
                 XamlRoot = XamlRoot,
             }.ShowAsync();
             return;
         }
 
-        var currentRule = 0;
-
-        /* Chain begin rules */
-
-        if (SubChain.Length == 0)
+        try
         {
-            if (_chainMultiplicity == 1)
+
+            var currentRule = 0;
+
+            /* Chain begin rules */
+            if (SubChain.Length == 0)
             {
+                if (_chainMultiplicity == 1)
+                {
+                    _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                    foreach (var symbol in _alphabet)
+                    {
+                        _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(symbol, ruleSymbols[currentRule], SelectedDirectionIndex));
+                    }
+                }
+                else
+                {
+                    for (var i = 0; i < _chainMultiplicity - 1; i++)
+                    {
+                        _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                        foreach (var symbol in _alphabet)
+                        {
+                            _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(symbol, ruleSymbols[currentRule + 1], SelectedDirectionIndex));
+                        }
+                        currentRule++;
+                    }
+
+                    _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                    foreach (var symbol in _alphabet)
+                    {
+                        _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(symbol, ruleSymbols[0], SelectedDirectionIndex));
+                    }
+                }
+
                 _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
                 foreach (var symbol in _alphabet)
                 {
-                    _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, symbol, ruleSymbols[currentRule]));
+                    _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(symbol));
                 }
             }
             else
             {
-                for (var i = 0; i < _chainMultiplicity - 1; i++)
+                if (_chainMultiplicity == 1)
                 {
                     _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
                     foreach (var symbol in _alphabet)
                     {
-                        _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, symbol, ruleSymbols[currentRule + 1]));
+                        _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(symbol, ruleSymbols[currentRule], SelectedDirectionIndex));
+                    }
+
+                    /* Jump to sub-chain rules */
+                    foreach (var symbol in _alphabet)
+                    {
+                        _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(symbol, ruleSymbols[currentRule + 1], SelectedDirectionIndex));
                     }
                     currentRule++;
-                }
 
-                _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
-                foreach (var symbol in _alphabet)
-                {
-                    _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, symbol, ruleSymbols[0]));
-                }
-            }
+                    /* Obligatory sub-chain rules */
+                    foreach (var symbol in SubChain)
+                    {
+                        _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                        _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(symbol, ruleSymbols[++currentRule], SelectedDirectionIndex));
+                    }
 
-            _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
-            foreach (var symbol in _alphabet)
-            {
-                _grammar[ruleSymbols[currentRule].ToString()].Add($"{symbol}");
-            }
-        }
-        else
-        {
-            if (_chainMultiplicity == 1)
-            {
-                _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
-                foreach (var symbol in _alphabet)
-                {
-                    _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, symbol, ruleSymbols[currentRule]));
-                }
+                    /* Sequences for only sub-chain chain */
+                    if (SubChain.Length > 0)
+                    {
+                        _grammar[ruleSymbols[0].ToString()].Add(BuildSequence(SubChain[0], ruleSymbols[2], SelectedDirectionIndex));
+                        _grammar[ruleSymbols[currentRule - 1].ToString()].Add(BuildSequence(SubChain[^1]));
+                    }
 
-                /* Jump to sub-chain rules */
-                foreach (var symbol in _alphabet)
-                {
-                    _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, symbol, ruleSymbols[currentRule + 1]));
-                }
-                currentRule++;
-
-                /* Obligatory sub-chain rules */
-                foreach (var symbol in SubChain)
-                {
-                    _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
-                    _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, symbol.ToString(), ruleSymbols[++currentRule]));
-                }
-
-                /* Sequences for only sub-chain chain */
-                if (SubChain.Length > 0)
-                {
-                    _grammar[ruleSymbols[0].ToString()].Add(BuildSequence(SelectedDirectionIndex, SubChain[0].ToString(), ruleSymbols[2]));
-                    _grammar[ruleSymbols[currentRule - 1].ToString()].Add($"{SubChain[^1]}");
-                }
-
-                /* Chain end rules */
-                _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
-                foreach (var symbol in _alphabet)
-                {
-                    _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, symbol, ruleSymbols[currentRule]));
-                }
-                foreach (var symbol in _alphabet)
-                {
-                    _grammar[ruleSymbols[currentRule].ToString()].Add($"{symbol}");
-                }
-            }
-            else
-            {
-                var isSubChainMultiple = (SubChain.Length % _chainMultiplicity) == 0;
-                var diff = _chainMultiplicity - SubChain.Length;
-                var startChainLength = _chainMultiplicity - 1;
-                var endChainLength = _chainMultiplicity;
-
-                /* Chain begin rules - 1 */
-                for (var i = 0; i < startChainLength; i++)
-                {
+                    /* Chain end rules */
                     _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
                     foreach (var symbol in _alphabet)
                     {
-                        _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, symbol, ruleSymbols[currentRule + 1]));
+                        _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(symbol, ruleSymbols[currentRule], SelectedDirectionIndex));
                     }
-                    currentRule++;
-                }
-
-                /* Jump to start rule when begin chain is multiple */
-                _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
-                foreach (var symbol in _alphabet)
-                {
-                    _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, symbol, ruleSymbols[0]));
-                }
-                currentRule++;
-
-                if (!isSubChainMultiple && diff == 0)
-                {
-                    _grammar.TryAdd(ruleSymbols[0].ToString(), new());
                     foreach (var symbol in _alphabet)
                     {
-                        _grammar[ruleSymbols[0].ToString()].Add(BuildSequence(SelectedDirectionIndex, $"ФФ{symbol}", ruleSymbols[currentRule]));
+                        _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(symbol));
                     }
-                }
-
-                /* Jump to sub-chain rules */
-                var jumpRule = ((_chainMultiplicity - SubChain.Length - 1) < 0 && isSubChainMultiple) ? 0 : Convert.ToInt32(MathF.Abs(_chainMultiplicity - SubChain.Length));
-                _grammar.TryAdd(ruleSymbols[jumpRule].ToString(), new());
-                if (SubChain.Length > 1)
-                {
-                    _grammar[ruleSymbols[jumpRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, $"{SubChain[0]}", ruleSymbols[_chainMultiplicity]));
                 }
                 else
                 {
-                    //_grammar[ruleSymbols[0].ToString()].Add(BuildSequence(SelectedDirectionIndex, $"{SubChain[0]}", ruleSymbols[_chainMultiplicity]));
-                    _grammar[ruleSymbols[jumpRule].ToString()].Add($"{SubChain[0]}");
-                }
+                    var isSubChainMultiple = (SubChain.Length % _chainMultiplicity) == 0;
+                    var diff = _chainMultiplicity - SubChain.Length;
+                    var startChainLength = _chainMultiplicity - 1;
+                    var endChainLength = _chainMultiplicity;
 
-                /* Obligatory sub-chain rules */
-                if (SubChain.Length > 1)
-                {
-                    foreach (var symbol in SubChain[1..^1])
+                    /* Chain begin rules - 1 */
+                    for (var i = 0; i < startChainLength; i++)
                     {
                         _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
-                        _grammar[ruleSymbols[currentRule++].ToString()].Add(BuildSequence(SelectedDirectionIndex, $"{symbol}", ruleSymbols[currentRule]));
+                        foreach (var symbol in _alphabet)
+                        {
+                            _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(symbol, ruleSymbols[currentRule + 1], SelectedDirectionIndex));
+                        }
+                        currentRule++;
                     }
-                    _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
-                    _grammar[ruleSymbols[currentRule].ToString()].Add($"{SubChain[^1]}");
-                }
 
-                /* Chain end rules */
-                if (SubChain.Length > 1)
-                {
-                    _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
-                    _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, SubChain[^1].ToString(), ruleSymbols[++currentRule + 1]));
-
-                    _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
-                    _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, SubChain[^1].ToString(), ruleSymbols[++currentRule]));
-
-                    _grammar.TryAdd(ruleSymbols[0].ToString(), new());
-                    _grammar[ruleSymbols[0].ToString()].Add(BuildSequence(SelectedDirectionIndex, SubChain[0].ToString(), ruleSymbols[currentRule - 1]));
-                }
-                else
-                {
-                    _grammar.TryAdd(ruleSymbols[0].ToString(), new());
-                    _grammar[ruleSymbols[0].ToString()].Add(BuildSequence(SelectedDirectionIndex, SubChain[^1].ToString(), ruleSymbols[currentRule]));
-                }
-
-                if (SubChain.Length > 1)
-                {
-                    foreach (var symbol in SubChain[1..^1])
-                    {
-                        _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
-                        _grammar[ruleSymbols[currentRule++].ToString()].Add(BuildSequence(SelectedDirectionIndex, $"{symbol}", ruleSymbols[currentRule]));
-                    }
-                    _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
-                    _grammar[ruleSymbols[currentRule].ToString()].Add($"{SubChain[^1]}");
-                }
-
-                var exitRule = currentRule + Convert.ToInt32(MathF.Abs(_chainMultiplicity - SubChain.Length)) - 1;
-
-                for (var i = 0; i < endChainLength; i++)
-                {
+                    /* Jump to start rule when begin chain is multiple */
                     _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
                     foreach (var symbol in _alphabet)
                     {
-                        _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, symbol, ruleSymbols[currentRule + 1]));
+                        _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(symbol, ruleSymbols[0], SelectedDirectionIndex));
                     }
                     currentRule++;
-                }
 
-                _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
-                foreach (var symbol in _alphabet)
-                {
-                    _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SelectedDirectionIndex, symbol, ruleSymbols[currentRule - _chainMultiplicity]));
-                }
+                    if (!isSubChainMultiple && diff == 0)
+                    {
+                        _grammar.TryAdd(ruleSymbols[0].ToString(), new());
+                        foreach (var symbol in _alphabet)
+                        {
+                            _grammar[ruleSymbols[0].ToString()].Add(BuildSequence($"ФФ{symbol}", ruleSymbols[currentRule], SelectedDirectionIndex));
+                        }
+                    }
 
-                _grammar.TryAdd(ruleSymbols[exitRule].ToString(), new());
-                foreach (var symbol in _alphabet)
-                {
-                    _grammar[ruleSymbols[exitRule].ToString()].Add($"{symbol}");
+                    /* Jump to sub-chain rules */
+                    var jumpRule = ((_chainMultiplicity - SubChain.Length - 1) < 0 && isSubChainMultiple) ? 0 : Convert.ToInt32(MathF.Abs(_chainMultiplicity - SubChain.Length));
+                    _grammar.TryAdd(ruleSymbols[jumpRule].ToString(), new());
+                    if (SubChain.Length > 1)
+                    {
+                        _grammar[ruleSymbols[jumpRule].ToString()].Add(BuildSequence(SubChain[0], ruleSymbols[_chainMultiplicity], SelectedDirectionIndex));
+                    }
+                    else
+                    {
+                        _grammar[ruleSymbols[jumpRule].ToString()].Add(BuildSequence(SubChain[0]));
+                    }
+
+                    /* Obligatory sub-chain rules */
+                    if (SubChain.Length > 1)
+                    {
+                        foreach (var symbol in SubChain[1..^1])
+                        {
+                            _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                            _grammar[ruleSymbols[currentRule++].ToString()].Add(BuildSequence(symbol, ruleSymbols[currentRule], SelectedDirectionIndex));
+                        }
+                        _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                        _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SubChain[^1]));
+                    }
+
+                    /* Chain end rules */
+                    if (SubChain.Length > 1)
+                    {
+                        _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                        _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(SubChain[^1], ruleSymbols[++currentRule], SelectedDirectionIndex));
+                    }
+
+                    var endLoopRule = currentRule;
+
+                    for (var i = 0; i < endChainLength - 1; i++)
+                    {
+                        _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                        foreach (var symbol in _alphabet)
+                        {
+                            _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(symbol, ruleSymbols[currentRule + 1], SelectedDirectionIndex));
+                        }
+                        currentRule++;
+                    }
+
+                    _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                    foreach (var symbol in _alphabet)
+                    {
+                        _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(symbol, ruleSymbols[endLoopRule], SelectedDirectionIndex));
+                    }
+                    currentRule++;
+
+                    foreach (var symbol in _alphabet)
+                    {
+                        _grammar[ruleSymbols[currentRule - 1].ToString()].Add(BuildSequence(symbol));
+                    }
                 }
             }
         }
-
-        foreach (var rule in _grammar)
+        catch
         {
-            _grammar[rule.Key] = rule.Value.Distinct().ToList();
+            _grammar.Clear();
         }
 
-        /* Build grammar */
         foreach (var rule in _grammar)
         {
             RawGrammar += $"{rule.Key}: ";
@@ -519,27 +499,23 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         }
         Grammar = RawGrammar;
     }
+
     private void AlphabetChanging(TextBox sender, TextBoxTextChangingEventArgs args)
     {
-        var prevSelectionPos = sender.SelectionStart;
-
-        if (sender.Text.Length == 0)
-        {
-            return;
-        }
-
-        if (!Regex.IsMatch(sender.Text[sender.SelectionStart - 1].ToString(), @"[a-z]|,|\s")
+        var condition = !Regex.IsMatch(sender.Text[sender.SelectionStart - 1].ToString(), @"[a-z]|,|\s")
             || Regex.IsMatch(sender.Text, @"[a-z]{2,}|[a-z]\s|^,+|^\s+|,,|,\s+,|\s{2,}")
-            || _alphabet.Contains(sender.Text[sender.SelectionStart - 1].ToString()))
-        {
-            sender.Text = sender.Text.Remove(sender.SelectionStart - 1, 1);
-            sender.SelectionStart = prevSelectionPos - 1;
-            return;
-        }
+            || _alphabet.Contains(sender.Text[sender.SelectionStart - 1].ToString());
+        RevertTextBoxEnteredSymbol(sender, condition);
     }
 
     private void SubChainChanging(TextBox sender, TextBoxTextChangingEventArgs args)
     {
+        var condition = !_alphabet.Contains(sender.Text[sender.SelectionStart - 1].ToString());
+        RevertTextBoxEnteredSymbol(sender, condition);
+    }
+
+    private static void RevertTextBoxEnteredSymbol(TextBox sender, bool condition)
+    {
         var prevSelectionPos = sender.SelectionStart;
 
         if (sender.Text.Length == 0)
@@ -547,63 +523,22 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
             return;
         }
 
-        if (!_alphabet.Contains(sender.Text[sender.SelectionStart - 1].ToString()))
+        if (condition)
         {
             sender.Text = sender.Text.Remove(sender.SelectionStart - 1, 1);
             sender.SelectionStart = prevSelectionPos - 1;
-            return;
-        }
-    }
-
-    [ComImport]
-    [Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1")]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    public interface IInitializeWithWindow
-    {
-        void Initialize(IntPtr hwnd);
-    }
-    [ComImport]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    [Guid("EECDBF0E-BAE9-4CB6-A68E-9598E1CB57BB")]
-    internal interface IWindowNative
-    {
-        IntPtr WindowHandle
-        {
-            get;
         }
     }
 
     public static async void SaveGrammarToFile()
     {
         var savePicker = new FileSavePicker();
-
-        var hwnd = App.MainWindow.As<IWindowNative>().WindowHandle;
-
-        var initializeWithWindow = savePicker.As<IInitializeWithWindow>();
-        initializeWithWindow.Initialize(hwnd);
+        savePicker.InitializeWithWindow(App.MainWindow);
 
         savePicker.FileTypeChoices.Add("Plain Text", new List<string>() { ".txt" });
         savePicker.SuggestedFileName = "OutputGrammar";
 
         var path = await savePicker.PickSaveFileAsync();
-
         await File.WriteAllTextAsync(path.Path, Grammar);
-    }
-}
-
-public class GrammarException : Exception
-{
-    public GrammarException()
-    {
-    }
-
-    public GrammarException(string message)
-        : base(message)
-    {
-    }
-
-    public GrammarException(string message, Exception inner)
-        : base(message, inner)
-    {
     }
 }

@@ -225,12 +225,21 @@
     <value>Restrictions:</value>
   </data>
   <data name="Settings_RestrictionsDescription.Text" xml:space="preserve">
-    <value>The number of characters in a substring is limited to 24 characters, because Latin letters are used as rules. Out of 26 letters - 2 letters for the initial and final rules, 24 remain for the substring.</value>
+    <value>The number of characters in the substring must be no more than 23 - the multiplicity. Since the letters of the Latin alphabet are used for non-terminal characters, and their number is limited to 26.</value>
   </data>
   <data name="AlphabetTextBox.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Comma separated alphabet symbols</value>
   </data>
   <data name="SubChainTextBox.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Only alphabet characters are allowed. Maximum 24 characters</value>
+  </data>
+  <data name="GenerateAndStartButton.Content" xml:space="preserve">
+    <value>Generate and Start</value>
+  </data>
+  <data name="LLRadioButton.Content" xml:space="preserve">
+    <value>LL</value>
+  </data>
+  <data name="RLRadioButton.Content" xml:space="preserve">
+    <value>RL</value>
   </data>
 </root>
