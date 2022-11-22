@@ -203,12 +203,12 @@
                 </StackPanel>
             </Grid>
             <ScrollViewer Grid.Row="0" Grid.Column="1">
-                <TextBox
+                    <TextBox
                     x:Uid="ChainsTextBox"
-                    AcceptsReturn="True"
+                        AcceptsReturn="True"
                     FontFamily="Cascadia Code"
-                    IsReadOnly="True"
-                    Text="{x:Bind Chains, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        IsReadOnly="True"
+                        Text="{x:Bind Chains, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                     TextWrapping="Wrap">
                     <TextBox.HeaderTemplate>
                         <DataTemplate x:DataType="x:String">
@@ -216,7 +216,8 @@
                         </DataTemplate>
                     </TextBox.HeaderTemplate>
                 </TextBox>
-            </ScrollViewer>
+                </ScrollViewer>
+            </Grid>
         </Grid>
 
     </Grid>
