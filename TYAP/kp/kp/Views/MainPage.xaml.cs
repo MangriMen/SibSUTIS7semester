@@ -25,7 +25,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
 
     private Dictionary<string, List<string>> _grammar = new();
 
-    public static string Grammar
+    public static string StaticChains
     {
         get; private set;
     } = "";
@@ -161,6 +161,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
             var output = chainsOutput.Select(chain => chain.GetFormattedOutput());
 
             Chains = string.Join('\n', output);
+            StaticChains = Chains;
         }
         catch (GrammarException)
         {
@@ -511,15 +512,14 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         {
             RawGrammar = RawGrammar[0..^1];
         }
-        Grammar = RawGrammar;
     }
 
     private void AlphabetChanging(TextBox sender, TextBoxTextChangingEventArgs args)
     {
         try
         {
-            var condition = !Regex.IsMatch(sender.Text[sender.SelectionStart - 1].ToString(), @"[a-z]|,|\s")
-                || Regex.IsMatch(sender.Text, @"[a-z]{2,}|[a-z]\s|^,+|^\s+|,,|,\s+,|\s{2,}")
+            var condition = !Regex.IsMatch(sender.Text[sender.SelectionStart - 1].ToString(), @"[a-z0-9]|,|\s")
+                || Regex.IsMatch(sender.Text, @"[a-z0-9]{2,}|[a-z0-9]\s|^,+|^\s+|,,|,\s+,|\s{2,}")
                 || _alphabet.Contains(sender.Text[sender.SelectionStart - 1].ToString());
             Utils.RevertTextBoxEnteredSymbol(sender, condition);
         }
@@ -536,15 +536,15 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         catch { }
     }
 
-    public static async void SaveGrammarToFile()
+    public static async void SaveChainsToFile()
     {
         var savePicker = new FileSavePicker();
         savePicker.InitializeWithWindow(App.MainWindow);
 
         savePicker.FileTypeChoices.Add("Plain Text", new List<string>() { ".txt" });
-        savePicker.SuggestedFileName = "OutputGrammar";
+        savePicker.SuggestedFileName = "Вывод";
 
         var path = await savePicker.PickSaveFileAsync();
-        await File.WriteAllTextAsync(path.Path, Grammar);
+        await File.WriteAllTextAsync(path.Path, StaticChains);
     }
 }

@@ -58,7 +58,7 @@ public class ShellViewModel : ObservableRecipient
 
     private void OnNavigated(object sender, NavigationEventArgs e) => IsBackEnabled = NavigationService.CanGoBack;
 
-    private void OnMenuFileSave() => MainPage.SaveGrammarToFile();
+    private void OnMenuFileSave() => MainPage.SaveChainsToFile();
 
     private void OnMenuFileExit() => Application.Current.Exit();
 
