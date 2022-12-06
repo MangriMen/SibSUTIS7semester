@@ -2,18 +2,13 @@ import secrets
 import random
 from typing import Dict, List
 import crypto
-import pprint
 
 
 class Client:
-    _p: int
-    _q: int
-    n: int
-
-    def __init__(self, file_name: str) -> None:
+    def __init__(self, file_name: str):
         self.graph_data = read_file(file_name)
 
-    def _get_random_colors_transposition(self):
+    def get_random_colors_transposition(self):
         shuffled_colors = list(set(
             self.graph_data["vertices_colors"].values()))
         random.shuffle(shuffled_colors)
@@ -23,10 +18,10 @@ class Client:
             for key, value in self.graph_data["vertices_colors"].items()
         }
 
-    def _get_prime_for_vertex(self, vertices_colors):
+    def get_prime_for_vertex(self, vertices_colors):
         salted = []
         for vertex in range(1, self.graph_data["vertices_count"] + 1):
-            r = crypto.getPrimeInBounds(2147483648, 4294967296)
+            r = crypto.get_prime_in_bounds(2147483648, 4294967296)
 
             color = vertices_colors[vertex]
 
@@ -38,68 +33,62 @@ class Client:
 
         return salted
 
-    def _get_vertexes_keys(self):
+    def get_vertexes_keys(self):
         return [
-            getRsa() for _ in range(1, self.graph_data["vertices_count"] + 1)
+            get_rsa() for _ in range(1, self.graph_data["vertices_count"] + 1)
         ]
 
-    def _get_encoded_vertexes_color(self, prime_vertexes, vertexes_keys):
+    def get_encoded_vertexes_color(self, rv, vertexes_keys):
         return [
             pow(r, key[2], key[0])
-            for r, key in zip(prime_vertexes, vertexes_keys)
+            for r, key in zip(rv, vertexes_keys)
         ]
 
-    def _get_edge_from_server(self, edge, vertexes_keys):
+    def get_edge_from_server(self, edge, vertexes_keys):
         return (vertexes_keys[edge[0] - 1][1], vertexes_keys[edge[1] - 1][1])
 
 
 class Server:
-
     Nv: List[int]
     dv: List[int]
     Zv: List[int]
 
-    def __init__(self, file_name) -> None:
+    def __init__(self, file_name):
         self.Nv = []
         self.dv = []
         self.Zv = []
         self.graph_data = read_file(file_name)
 
-    def _get_data_from_client(self, Nv, dv, Zv):
+    def get_data_from_client(self, Nv, dv, Zv):
         self.Nv = Nv
         self.dv = dv
         self.Zv = Zv
 
-        return self._get_random_edge()
+    def get_random_edge(self):
+        i = j = -1
 
-    def _get_random_edge(self):
-        i = -1
-        j = -1
         while True:
-            i = secrets.randbelow(self.graph_data["vertices_count"] + 1)
+            i = j = secrets.randbelow(self.graph_data["vertices_count"] + 1)
 
-            while (j := secrets.randbelow(self.graph_data["vertices_count"]) +
-                   1) == i:
-                pass
+            while j == i:
+                j = secrets.randbelow(self.graph_data["vertices_count"] + 1)
 
             if i in self.graph_data["graph"] and j in self.graph_data["graph"]:
                 if self.graph_data["graph"][i][j] == 1:
                     break
 
         self.i, self.j = i, j
+
         return (i, j)
 
-    def _get_vertexes_from_client(self, cv):
+    def are_vertexes_correct(self, cv):
         Zv1 = (pow(self.Zv[self.i - 1], cv[0], self.Nv[self.i - 1]))
         Zv2 = (pow(self.Zv[self.j - 1], cv[1], self.Nv[self.j - 1]))
 
         Zv1_color = Zv1 & 0b11
         Zv2_color = Zv2 & 0b11
 
-        if (Zv1_color) == (Zv2_color):
-            return -1
-
-        return 0
+        return (Zv1_color) != (Zv2_color)
 
 
 def read_file(file_name):
@@ -123,8 +112,7 @@ def read_file(file_name):
             v1 = int(raw_data[edge][0])
             v2 = int(raw_data[edge][2])
 
-            graph[v1][v2] = 1
-            graph[v2][v1] = 1
+            graph[v1][v2] = graph[v2][v1] = 1
 
         for color in range(3 + edges_count, 3 + edges_count + vertices_count):
             vertices_colors[int(raw_data[color][0])] = int(raw_data[color][2])
@@ -137,17 +125,18 @@ def read_file(file_name):
     }
 
 
-def getRsa():
-    P = crypto.getPrimeInBounds(1 << 255, (1 << 256) - 1)
-    Q = crypto.getPrimeInBounds(1 << 255, (1 << 256) - 1)
-
+def get_rsa():
+    P = crypto.get_prime_in_bounds(1 << 255, (1 << 256) - 1)
+    Q = crypto.get_prime_in_bounds(1 << 255, (1 << 256) - 1)
     N = P * Q
+
     phi = (P - 1) * (Q - 1)
 
-    d = crypto.getCoprime(phi)
+    d = crypto.get_coprime(phi)
 
-    gcd, c, _ = crypto.extendedGCD(d, phi)
+    gcd, c, _ = crypto.extended_gcd(d, phi)
     assert gcd == 1
+
     while c < 0:
         c += phi
 
@@ -155,52 +144,37 @@ def getRsa():
 
 
 def main():
-    graph_file = "graph2.txt"
+    graph_file = "graph1.txt"
 
     alice = Client(graph_file)
     bob = Server(graph_file)
 
-    tries = 15
+    TRIES_COUNT = 20
 
-    for current_try in range(tries):
+    for current_try in range(TRIES_COUNT):
         # 1
-        transposed_colors = alice._get_random_colors_transposition()
-        # print(f"{transposed_colors=}")
+        transposed_colors = alice.get_random_colors_transposition()
 
         # 2
-        rv = alice._get_prime_for_vertex(transposed_colors)
-
-        # print("rv=")
-        # for color in rv:
-        #     print(bin(color))
+        rv = alice.get_prime_for_vertex(transposed_colors)
 
         # 3
-        vertex_keys = alice._get_vertexes_keys()
-        # print("vertex_keys")
-        # pprint.pprint(vertex_keys)
+        vertex_keys = alice.get_vertexes_keys()
 
         # 4
-        Zv = alice._get_encoded_vertexes_color(rv, vertex_keys)
-        # print("Zv")
-        # for encoded_color in Zv:
-        #     print(encoded_color)
-
+        Zv = alice.get_encoded_vertexes_color(rv, vertex_keys)
         Nv, _, dv = zip(*vertex_keys)
+        bob.get_data_from_client(Nv, dv, Zv)
 
-        edge = bob._get_data_from_client(Nv, dv, Zv)
-        # print(f"{edge=}")
-
-        cv = alice._get_edge_from_server(edge, vertex_keys)
-        # print(f"{cv=}")
-
-        if bob._get_vertexes_from_client(cv) == -1:
+        # 5
+        cv = alice.get_edge_from_server(bob.get_random_edge(), vertex_keys)
+        if not bob.are_vertexes_correct(cv):
             print("Alice is sus")
-            break
+            return
 
         print(f"Try #{current_try + 1} passed!")
 
-    if tries == 0:
-        print("Alice was not sus")
+    print("All tries passed successfully!")
 
 
 if __name__ == '__main__':

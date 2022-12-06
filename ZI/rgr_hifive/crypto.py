@@ -2,7 +2,7 @@ from math import gcd
 import random
 
 
-def extendedGCD(a, b):
+def extended_gcd(a, b):
     if a <= 0 or b <= 0:
         raise ValueError("a and b must be greater than zero")
 
@@ -17,12 +17,13 @@ def extendedGCD(a, b):
 
 
 def inverse(n, p):
-    gcd, inv, _ = extendedGCD(n, p)
+    gcd, inv, _ = extended_gcd(n, p)
     assert gcd == 1
+
     return inv
 
 
-def isPrime(n, trials=8):
+def is_prime(n, trials=8):
     if n != int(n):
         return False
     n = int(n)
@@ -55,20 +56,20 @@ def isPrime(n, trials=8):
     return True
 
 
-def getPrimeInBounds(a, b):
+def get_prime_in_bounds(a, b):
     while True:
         p = random.randint(a, b)
-        if isPrime(p):
+        if is_prime(p):
             return p
 
 
 def inverse(n, p):
-    gcd, inv, _ = extendedGCD(n, p)
+    gcd, inv, _ = extended_gcd(n, p)
     assert gcd == 1
     return inv
 
 
-def getCoprime(a):
+def get_coprime(a):
     while True:
         b = random.randrange(2, a)
         if gcd(a, b) == 1:
