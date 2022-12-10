@@ -1,0 +1,14 @@
+{q0,q1,q2,q4,qf},{a,b,c},{E,a,c},{0,1},q0,E,{qf}
+q0,c,E,q1,e,^
+q1,c,E,q1,cE,^
+q1,c,c,q1,cc,^
+q1,a,E,q2,E,^
+q1,a,c,q2,c,^
+q2,a,c,q2,ac,0
+q2,a,E,q2,aE,0
+q2,a,a,q2,aa,0
+q2,b,a,q3,a,^
+q3,b,a,q4,!,^
+q4,b,a,q3,a,^
+q4,^,c,q4,!,1
+q4,^,E,qf,@,^
