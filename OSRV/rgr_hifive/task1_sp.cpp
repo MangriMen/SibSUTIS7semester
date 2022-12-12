@@ -8,25 +8,28 @@ struct Channel
     static int benchmark;
 };
 int Channel::benchmark = 0;
-
 struct Connection
 {
     static int benchmark;
 };
 int Connection::benchmark = 0;
-
 struct Timer
 {
     static int64_t result;
 };
 int64_t Timer::result = 0;
 
+const int TRIES = 1e6;
+
+int64_t begin_times[TRIES];
+int64_t end_times[TRIES];
+
 void *send_msg(void *arg)
 {
-    int tries = *((int *)arg);
-    while (tries--)
+    for (int64_t i = 0; i < TRIES; ++i)
     {
         MsgSend(Connection::benchmark, NULL, NULL, NULL, NULL);
+        end_times[i] = ClockCycles();
     }
 
     return (void *)0;
@@ -34,18 +37,11 @@ void *send_msg(void *arg)
 
 void *receive_msg(void *arg)
 {
-    int64_t begin_time = 0;
-    int64_t end_time = 0;
-
-    int tries = *((int *)arg);
-    while (tries--)
+    for (int64_t i = 0; i < TRIES; ++i)
     {
-        begin_time = ClockCycles();
         int msg_id = MsgReceive(Channel::benchmark, NULL, NULL, NULL);
-        end_time = ClockCycles();
 
-        Timer::result += end_time - begin_time;
-
+        begin_times[i] = ClockCycles();
         MsgReply(msg_id, NULL, NULL, NULL);
     }
 
@@ -54,7 +50,6 @@ void *receive_msg(void *arg)
 
 int main()
 {
-    const int TRIES = 1e6;
     const int64_t CPU_FREQ = 4170000000ul;
 
     Channel::benchmark = ChannelCreate(0);
@@ -62,14 +57,19 @@ int main()
     pthread_t thread_1;
     pthread_t thread_2;
 
-    pthread_create(&thread_1, NULL, send_msg, (void *)&TRIES);
-    pthread_create(&thread_2, NULL, receive_msg, (void *)&TRIES);
+    pthread_create(&thread_1, NULL, send_msg, NULL);
+    pthread_create(&thread_2, NULL, receive_msg, NULL);
 
     pthread_join(thread_1, NULL);
     pthread_join(thread_2, NULL);
 
     pthread_cancel(thread_1);
     pthread_cancel(thread_2);
+
+    for (int64_t i = 0; i < TRIES; ++i)
+    {
+        Timer::result += end_times[i] - begin_times[i];
+    }
 
     std::cout << (Timer::result / (long double)TRIES) / (long double)CPU_FREQ << " seconds" << std::endl;
 
