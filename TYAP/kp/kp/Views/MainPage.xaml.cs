@@ -25,7 +25,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
 
     private Dictionary<string, List<string>> _grammar = new();
 
-    public static string Grammar
+    public static string StaticChains
     {
         get; private set;
     } = "";
@@ -161,6 +161,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
             var output = chainsOutput.Select(chain => chain.GetFormattedOutput());
 
             Chains = string.Join('\n', output);
+            StaticChains = Chains;
         }
         catch (GrammarException)
         {
@@ -490,6 +491,62 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
                     {
                         _grammar[ruleSymbols[currentRule - 1].ToString()].Add(BuildSequence(symbol));
                     }
+
+                    /* Jump to not aligned chains */
+                    for (var i = 1; i <= startChainLength; i++)
+                    {
+                        _grammar[ruleSymbols[i].ToString()].Add(BuildSequence(SubChain[0], ruleSymbols[currentRule], SelectedDirectionIndex));
+
+                        if (SubChain.Length > 1)
+                        {
+                            foreach (var symbol in SubChain[1..^1])
+                            {
+                                _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                                _grammar[ruleSymbols[currentRule++].ToString()].Add(BuildSequence(symbol, ruleSymbols[currentRule], SelectedDirectionIndex));
+                            }
+                            _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                            _grammar[ruleSymbols[currentRule++].ToString()].Add(BuildSequence(SubChain[^1], ruleSymbols[currentRule], SelectedDirectionIndex));
+                        }
+
+                        var kek = i + SubChain.Length;
+                        if ((i + SubChain.Length) % _chainMultiplicity == 0)
+                        {
+                            foreach (var symbol in _alphabet)
+                            {
+                                _grammar[ruleSymbols[currentRule - 1].ToString()].Add(BuildSequence(symbol));
+                            }
+                        }
+
+                        for (var j = 0; j < (int)MathF.Abs(_chainMultiplicity - SubChain.Length) + 1; j++)
+                        {
+                            if (j == (int)MathF.Abs(_chainMultiplicity - SubChain.Length))
+                            {
+                                _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                                foreach (var symbol in _alphabet)
+                                {
+                                    _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(symbol, ruleSymbols[endLoopRule], SelectedDirectionIndex));
+                                }
+                            }
+                            else
+                            {
+                                _grammar.TryAdd(ruleSymbols[currentRule].ToString(), new());
+                                foreach (var symbol in _alphabet)
+                                {
+                                    _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(symbol, ruleSymbols[currentRule + 1], SelectedDirectionIndex));
+                                }
+                            }
+
+                            if (j + i % _chainMultiplicity == 0)
+                            {
+                                foreach (var symbol in _alphabet)
+                                {
+                                    _grammar[ruleSymbols[currentRule].ToString()].Add(BuildSequence(symbol));
+                                }
+                            }
+
+                            currentRule++;
+                        }
+                    }
                 }
             }
         }
@@ -511,15 +568,14 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         {
             RawGrammar = RawGrammar[0..^1];
         }
-        Grammar = RawGrammar;
     }
 
     private void AlphabetChanging(TextBox sender, TextBoxTextChangingEventArgs args)
     {
         try
         {
-            var condition = !Regex.IsMatch(sender.Text[sender.SelectionStart - 1].ToString(), @"[a-z]|,|\s")
-                || Regex.IsMatch(sender.Text, @"[a-z]{2,}|[a-z]\s|^,+|^\s+|,,|,\s+,|\s{2,}")
+            var condition = !Regex.IsMatch(sender.Text[sender.SelectionStart - 1].ToString(), @"[a-z0-9]|,|\s")
+                || Regex.IsMatch(sender.Text, @"[a-z0-9]{2,}|[a-z0-9]\s|^,+|^\s+|,,|,\s+,|\s{2,}")
                 || _alphabet.Contains(sender.Text[sender.SelectionStart - 1].ToString());
             Utils.RevertTextBoxEnteredSymbol(sender, condition);
         }
@@ -536,15 +592,15 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         catch { }
     }
 
-    public static async void SaveGrammarToFile()
+    public static async void SaveChainsToFile()
     {
         var savePicker = new FileSavePicker();
         savePicker.InitializeWithWindow(App.MainWindow);
 
         savePicker.FileTypeChoices.Add("Plain Text", new List<string>() { ".txt" });
-        savePicker.SuggestedFileName = "OutputGrammar";
+        savePicker.SuggestedFileName = "Вывод";
 
         var path = await savePicker.PickSaveFileAsync();
-        await File.WriteAllTextAsync(path.Path, Grammar);
+        await File.WriteAllTextAsync(path.Path, StaticChains);
     }
 }

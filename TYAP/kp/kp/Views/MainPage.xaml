@@ -155,6 +155,7 @@
                         VerticalAlignment="Stretch"
                         AcceptsReturn="True"
                         FontFamily="Cascadia Code"
+                        IsSpellCheckEnabled="False"
                         Text="{x:Bind RawGrammar, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                         TextWrapping="Wrap">
                         <TextBox.HeaderTemplate>
