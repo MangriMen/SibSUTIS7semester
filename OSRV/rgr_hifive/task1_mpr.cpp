@@ -1,15 +1,13 @@
 #include <iostream>
-#include <vingraph.h>
 #include <pthread.h>
-#include <chrono>
-#include <string.h>
 #include <sys/neutrino.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/mman.h>
 #include <errno.h>
-#include <stdio.h>
+#include <string.h>
 
 struct Channel
 {
@@ -17,49 +15,60 @@ struct Channel
 };
 int Channel::benchmark = 0;
 
-struct Timer
-{
-    static int64_t result;
-};
-int64_t Timer::result = 0;
+const int TRIES = 1e6;
+int64_t *begin_times = NULL;
 
 void *receive_msg(void *arg)
 {
-    int64_t begin_time = 0;
-    int64_t end_time = 0;
-
-    int tries = *((int *)arg);
-    while (tries--)
+    for (int64_t i = 0; i < TRIES; ++i)
     {
-        begin_time = ClockCycles();
         int msg_id = MsgReceive(Channel::benchmark, NULL, NULL, NULL);
-        end_time = ClockCycles();
 
-        Timer::result += end_time - begin_time;
-
+        begin_times[i] = ClockCycles();
         MsgReply(msg_id, NULL, NULL, NULL);
     }
+
     return (void *)0;
 }
 
 int main()
 {
-    const int64_t CPU_FREQ = 4170000000ul;
-    int tries = 0;
+    int shm_fd = shm_open("/myregion", O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+    if (shm_fd == -1)
+    {
+        std::cout << strerror(errno) << std::endl;
+        return -1;
+    }
 
-    int fd = open("./mp_test", O_RDWR);
-    read(fd, &Channel::benchmark, sizeof(Channel::benchmark));
-    read(fd, &tries, sizeof(tries));
+    if (ftruncate(shm_fd, TRIES * sizeof(int64_t)) == -1)
+    {
+        std::cout << strerror(errno) << std::endl;
+        return -1;
+    }
+
+    begin_times = (std::int64_t *)mmap(0, TRIES * sizeof(int64_t), PROT_WRITE | PROT_READ, MAP_SHARED, shm_fd, 0);
+    close(shm_fd);
+
+    if (begin_times == MAP_FAILED)
+    {
+        std::cout << strerror(errno) << std::endl;
+        return -1;
+    }
+
+    pid_t PID = getpid();
+    Channel::benchmark = ChannelCreate(0);
+
+    int fd = open("./mp_test", O_CREAT | O_RDWR);
+    write(fd, &PID, sizeof(PID));
+    write(fd, &Channel::benchmark, sizeof(Channel::benchmark));
     close(fd);
 
     pthread_t thread;
-    pthread_create(&thread, NULL, receive_msg, (void *)&tries);
+    pthread_create(&thread, NULL, receive_msg, NULL);
 
     pthread_join(thread, NULL);
 
     pthread_cancel(thread);
-
-    std::cout << (Timer::result / (long double)tries) / (long double)CPU_FREQ << " seconds" << std::endl;
 
     return 0;
 }
