@@ -9,6 +9,7 @@ using kp.Models;
 using kp.Helpers;
 using CourseWork.Models.RegularExpression;
 using CourseWork.Helpers;
+using System.Linq;
 
 namespace kp.Views;
 
@@ -80,10 +81,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
     private string Symbol
     {
         get => _symbol;
-        set
-        {
-            _symbol = value;
-        }
+        set => _symbol = value;
     }
 
     private int _symbolMultiplicity = 1;
@@ -108,16 +106,21 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         InitializeComponent();
     }
 
-    private void GenerateClick(object sender, RoutedEventArgs e)
+    private void GenerateRegularExpression()
     {
+        var expressionAlphabet = string.Join("+", _alphabet);
+        RawRegularExpression = $"({expressionAlphabet})*{SubChain}({expressionAlphabet})*";
     }
 
-    private void StartClick(object sender, RoutedEventArgs e)
+    private void GenerateClick(object sender, RoutedEventArgs e)
     {
+        GenerateRegularExpression();
     }
 
     private void GenerateAndStartClick(object sender, RoutedEventArgs e)
     {
+        GenerateRegularExpression();
+        ParseRegularExpression();
     }
 
 
@@ -231,7 +234,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
                 {
                     foreach (dynamic token in regularExpression.tokens)
                     {
-                        var temp = (List<string>)VisitRegularExpression(token, uncompleted.Count);
+                        var temp = (List<string>)VisitRegularExpression(token, uncompleted.Count != 0 ? uncompleted[0].Length : 0);
 
                         uncompleted = uncompleted.EachWithEach(temp).ToList();
                     }
@@ -243,7 +246,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
                 var arr = new List<string>();
                 foreach (dynamic token in regularExpression.tokens)
                 {
-                    var temp = (List<string>)VisitRegularExpression(token, uncompleted.Count);
+                    var temp = (List<string>)VisitRegularExpression(token, uncompleted.Count != 0 ? uncompleted[0].Length : 0);
 
                     arr = arr.Union(temp).ToList();
                 }

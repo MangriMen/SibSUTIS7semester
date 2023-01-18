@@ -79,9 +79,8 @@
                         MaxLength="26"
                         Text="{x:Bind Symbol, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                         TextChanging="SymbolChanging" />
-
                     <!--Maximum="50" replace with length of current chain-->
-                    <NumberBox x:Uid="ChainMultiplicityNumberBox"
+                    <NumberBox x:Uid="SymbolMultiplicityNumberBox"
                         Grid.Row="0"
                         Grid.Column="3"
                         LargeChange="10"
@@ -143,7 +142,7 @@
             <ScrollViewer Grid.Row="0"
                 Grid.Column="1">
                 <ListView
-                    ItemsSource="{x:Bind Chains, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                    ItemsSource="{x:Bind Chains, Mode=OneWay}">
                 </ListView>
             </ScrollViewer>
         </Grid>
