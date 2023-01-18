@@ -1,0 +1,151 @@
+﻿<Page x:Class="kp.Views.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="ContentArea">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Uid="Main_Title"
+            Grid.Row="0"
+            Style="{StaticResource PageTitleStyle}" />
+
+        <Grid Grid.Row="1"
+            Margin="0,0,0,45"
+            RowSpacing="32">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Row="0"
+                ColumnSpacing="16"
+                RowSpacing="16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock x:Uid="InputDataTextBlock"
+                    Grid.Row="0"
+                    Grid.Column="0" />
+                <Grid Grid.Row="1"
+                    Grid.Column="0"
+                    ColumnSpacing="16"
+                    RowSpacing="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox x:Uid="AlphabetTextBox"
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Text="{x:Bind Alphabet, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        TextChanging="AlphabetChanging" />
+                    <TextBox x:Uid="SubChainTextBox"
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        MaxLength="26"
+                        Text="{x:Bind SubChain, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        TextChanging="SubChainChanging" />
+                    <TextBox x:Uid="SymbolTextBox"
+                        Grid.Row="0"
+                        Grid.Column="2"
+                        MaxLength="26"
+                        Text="{x:Bind Symbol, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        TextChanging="SymbolChanging" />
+
+                    <!--Maximum="50" replace with length of current chain-->
+                    <NumberBox x:Uid="ChainMultiplicityNumberBox"
+                        Grid.Row="0"
+                        Grid.Column="3"
+                        LargeChange="10"
+                        Maximum="50"
+                        Minimum="1"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Compact"
+                        Text="{x:Bind SymbolMultiplicity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <Button x:Uid="GenerateButton"
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Click="GenerateClick" />
+                </Grid>
+                <TextBox Grid.Row="2"
+                    MaxHeight="200"
+                    AcceptsReturn="True"
+                    Header="Регулярное выражение"
+                    IsSpellCheckEnabled="False"
+                    PlaceholderText="Введите регулярное выражение"
+                    Text="{x:Bind RawRegularExpression, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    TextChanging="RawRegularExpressionTextChanging"
+                    TextWrapping="Wrap" />
+                <StackPanel Grid.Row="3"
+                    Grid.Column="0"
+                    HorizontalAlignment="Left"
+                    Orientation="Vertical"
+                    Spacing="8">
+                    <TextBlock VerticalAlignment="Center"
+                        Text="Длина цепочки" />
+                    <StackPanel Orientation="Horizontal"
+                        Spacing="8">
+                        <NumberBox Header="От"
+                            LargeChange="10"
+                            Maximum="20"
+                            Minimum="0"
+                            SmallChange="1"
+                            SpinButtonPlacementMode="Compact"
+                            Text="{x:Bind SequenceLengthMin, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <NumberBox Header="До"
+                            LargeChange="10"
+                            Maximum="20"
+                            Minimum="0"
+                            SmallChange="1"
+                            SpinButtonPlacementMode="Compact"
+                            Text="{x:Bind SequenceLengthMax, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Grid.Row="4"
+                    Grid.Column="0"
+                    Orientation="Horizontal"
+                    Spacing="16">
+                    <Button x:Uid="GenerateAndStartButton"
+                        Click="GenerateAndStartClick" />
+                    <Button x:Uid="StartButton"
+                        Click="StartButtonClick" />
+                </StackPanel>
+            </Grid>
+            <ScrollViewer Grid.Row="0"
+                Grid.Column="1">
+                <ListView
+                    ItemsSource="{x:Bind Chains, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                </ListView>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Page>
