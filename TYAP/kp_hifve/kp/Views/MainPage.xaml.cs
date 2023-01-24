@@ -1,21 +1,26 @@
 ﻿using System.ComponentModel;
 using System.Text.RegularExpressions;
-using System.Text;
 using kp.ViewModels;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml;
 using Windows.Storage.Pickers;
-using kp.Models;
 using kp.Helpers;
 using CourseWork.Models.RegularExpression;
 using CourseWork.Helpers;
-using System.Linq;
+using kp.Contracts.Services;
+using Windows.ApplicationModel.Store;
+using Microsoft.UI.Xaml.Media;
 
 namespace kp.Views;
 
 public sealed partial class MainPage : Page, INotifyPropertyChanged
 {
-    public static string StaticChains
+    public static List<string> StaticChains
+    {
+        get; private set;
+    } = new();
+
+    public static string StaticRegularExpression
     {
         get; private set;
     } = "";
@@ -104,22 +109,112 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
     {
         ViewModel = App.GetService<MainViewModel>();
         InitializeComponent();
+
+        var themeSelectionService = App.GetService<IThemeSelectorService>();
+        themeSelectionService.SetThemeAsync(ElementTheme.Light);
     }
 
     private void GenerateRegularExpression()
     {
-        var expressionAlphabet = string.Join("+", _alphabet);
-        RawRegularExpression = $"({expressionAlphabet})*{SubChain}({expressionAlphabet})*";
+        if (_alphabet.Count == 0)
+        {
+            RawRegularExpression = "";
+            StaticRegularExpression = RawRegularExpression;
+
+            return;
+        }
+
+        var newRegularExpression = "";
+
+        var alphabetFiltered = _alphabet.FindAll((letter) => letter != _symbol);
+        var mainBracket = $"({string.Join("+", alphabetFiltered)})*";
+        var subchainWithBrackets = $"{mainBracket}{SubChain}";
+
+        var choosenSymbolInSubChainCount = 0;
+        if (_symbol.Length != 0)
+        {
+            choosenSymbolInSubChainCount = SubChain.Where((letter) => letter == _symbol[0]).Count();
+        }
+
+        if (_symbolMultiplicity < choosenSymbolInSubChainCount)
+        {
+            throw new Exception("Кратность символа должна быть не меньше чем количество вхождений этого символа в подцепочку.");
+        }
+        var symbolCount = Math.Max(_symbolMultiplicity - choosenSymbolInSubChainCount, 0);
+        for (var j = 0; j < symbolCount + 1; ++j)
+        {
+            var temp = "";
+
+            for (var i = 0; i < symbolCount + 1; ++i)
+            {
+                if (i == j)
+                {
+                    if (SubChain.Length != 0)
+                    {
+                        temp += subchainWithBrackets;
+                    }
+                }
+                else if (_symbol.Length != 0)
+                {
+                    temp += $"{mainBracket}{_symbol}";
+                }
+            }
+
+            newRegularExpression += $"({temp}{mainBracket})+";
+            if (_symbol.Length == 0 || SubChain.Length == 0)
+            {
+                break;
+            }
+        }
+
+        RawRegularExpression = newRegularExpression[..^1];
+        StaticRegularExpression = RawRegularExpression;
     }
 
     private void GenerateClick(object sender, RoutedEventArgs e)
     {
-        GenerateRegularExpression();
+        try
+        {
+            GenerateRegularExpression();
+        }
+        catch (Exception error)
+        {
+            try
+            {
+                _ = new ContentDialog()
+                {
+                    Title = "Ошибка",
+                    Content = error.Message,
+                    CloseButtonText = "Закрыть",
+                    XamlRoot = XamlRoot,
+                    RequestedTheme = ElementTheme.Light,
+                }.ShowAsync();
+            }
+            catch { }
+        }
     }
 
     private void GenerateAndStartClick(object sender, RoutedEventArgs e)
     {
-        GenerateRegularExpression();
+        try
+        {
+            GenerateRegularExpression();
+        }
+        catch (Exception error)
+        {
+            try
+            {
+                _ = new ContentDialog()
+                {
+                    Title = "Ошибка",
+                    Content = error.Message,
+                    CloseButtonText = "Закрыть",
+                    XamlRoot = XamlRoot,
+                    RequestedTheme = ElementTheme.Light,
+                }.ShowAsync();
+            }
+            catch { }
+        }
         ParseRegularExpression();
     }
 
@@ -259,6 +354,7 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
                 break;
         }
         completed = completed.Union(uncompleted).ToList();
+
         return completed;
     }
 
@@ -270,12 +366,30 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         return matchingChains;
     }
 
-
     public void ParseRegularExpression()
     {
-        _regularExpression = GetParsedRegularExpression(RawRegularExpression);
+        try
+        {
+            _regularExpression = GetParsedRegularExpression(RawRegularExpression);
+        }
+        catch
+        {
+            try
+            {
+                _ = new ContentDialog()
+                {
+                    Title = "Ошибка",
+                    Content = "Регулярное выражение неверно или содержит ошибку.",
+                    CloseButtonText = "Закрыть",
+                    XamlRoot = XamlRoot,
+                    RequestedTheme = ElementTheme.Light,
+                }.ShowAsync();
+            }
+            catch { }
+        }
         var generatedChains = GenerateSequences(_regularExpression).ToArray();
         Chains = generatedChains.ToList();
+        StaticChains = Chains;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Chains)));
     }
 
@@ -325,6 +439,9 @@ public sealed partial class MainPage : Page, INotifyPropertyChanged
         savePicker.SuggestedFileName = "output";
 
         var path = await savePicker.PickSaveFileAsync();
-        await File.WriteAllTextAsync(path.Path, StaticChains);
+        if (path != null)
+        {
+            await File.WriteAllTextAsync(path.Path, $"{StaticRegularExpression}\n\n{string.Join('\n', StaticChains)}");
+        }
     }
 }
